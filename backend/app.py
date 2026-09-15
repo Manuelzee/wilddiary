@@ -34,10 +34,8 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
     if not app.config["JWT_SECRET"]:
-        if os.getenv("APP_ENV") == "production" and not app.config.get("TESTING"):
-            raise RuntimeError("JWT_SECRET must be set in production.")
-        app.logger.warning("Using a development JWT secret; set JWT_SECRET before deployment.")
-        app.config["JWT_SECRET"] = "development-only-change-me"
+        app.logger.warning("JWT_SECRET is not set; generating a secure runtime secret for this instance.")
+        app.config["JWT_SECRET"] = os.getenv("JWT_SECRET") or hashlib.sha256(f"wilddiary-{os.urandom(24)}".encode()).hexdigest()
 
     cors_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000")
     if cors_origins_env.strip() == "*":
