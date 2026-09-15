@@ -1,0 +1,13 @@
+backend/.env
+backend/.venv/
+backend/__pycache__/
+backend/tests/__pycache__/
+*.pyc
+*.db
+*.db-wal
+*.db-shm
+*.log
+tmp/
+wilddiary/node_modules/
+wilddiary/dist/
+wilddiary/.env.local

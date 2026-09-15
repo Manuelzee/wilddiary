@@ -1,0 +1,9 @@
+import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Heading, ListItem, SimpleGrid, Text, UnorderedList } from '@chakra-ui/react';
+
+export default function Safety() {
+  return <Box maxW="5xl" mx="auto" w="100%" py={10}><Heading>Safety & community care</Heading><Text color="gray.500" mt={2} mb={7}>The boundaries that keep Wild Diary supportive, private, and human.</Text>
+    <Alert status="warning" borderRadius="2xl" mb={6}><AlertIcon /><Box><AlertTitle>Wild Diary is not an emergency service</AlertTitle><AlertDescription>If you may be in immediate danger, contact local emergency services. In Nigeria, call 112, or go to the nearest emergency department.</AlertDescription></Box></Alert>
+    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}><Box p={6} border="1px solid" borderColor="gray.200" borderRadius="2xl"><Heading size="md" mb={4}>Community guidelines</Heading><UnorderedList spacing={3} color="gray.600"><ListItem>Respond with empathy; do not shame, harass, or diagnose.</ListItem><ListItem>Never attempt to identify an anonymous writer.</ListItem><ListItem>Do not promote self-harm, violence, hate, or dangerous advice.</ListItem><ListItem>Protect personal information and report concerns rather than retaliating.</ListItem></UnorderedList></Box>
+    <Box p={6} border="1px solid" borderColor="gray.200" borderRadius="2xl"><Heading size="md" mb={4}>How support is labeled</Heading><Text color="gray.600" mb={3}><strong>Peer support</strong> comes from community members and is personal opinion.</Text><Text color="gray.600" mb={3}><strong>AI reflection</strong> is generated content that may be inaccurate and is never a diagnosis.</Text><Text color="gray.600"><strong>Professional support</strong> displays a verification badge only after administrative review.</Text></Box></SimpleGrid>
+  </Box>;
+}
