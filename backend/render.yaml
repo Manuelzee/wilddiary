@@ -1,21 +1,17 @@
 services:
   - type: web
     name: wilddiary-api
-    env: python
+    runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --config gunicorn.conf.py app:app
-    disk:
-      name: sqlite-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
       - key: APP_ENV
         value: production
       - key: PORT
         value: 5000
       - key: DATABASE_PATH
-        value: /data/wilddiary.db
+        value: /app/wilddiary.db
       - key: CORS_ORIGINS
-        value: https://wilddiary.vercel.app,https://wilddiary.netlify.app
+        value: https://wilddiary-social.netlify.app,https://wilddiary.netlify.app
       - key: JWT_SECRET
         generateValue: true
