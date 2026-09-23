@@ -1,4 +1,9 @@
-export const API_URL = (import.meta.env.VITE_API_URL || 'https://wilddiary.onrender.com/api').replace(/\/$/, '');
+const RAW_URL = (import.meta.env.VITE_API_URL || '').trim();
+let targetUrl = 'https://wilddiary.onrender.com/api';
+if (RAW_URL && !RAW_URL.includes('railway.app')) {
+  targetUrl = RAW_URL.startsWith('http') ? RAW_URL : `https://${RAW_URL}`;
+}
+export const API_URL = targetUrl.replace(/\/$/, '');
 
 export async function apiRequest(path, options = {}) {
   const token = localStorage.getItem('token');
