@@ -11,9 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ .
 
-RUN mkdir -p /data && chmod 777 /data
-ENV DATABASE_PATH=/data/wilddiary.db
+ENV DATABASE_PATH=/tmp/wilddiary.db
 
-EXPOSE 5000
+EXPOSE 10000
 
 CMD ["gunicorn", "--config", "gunicorn.conf.py", "app:app"]

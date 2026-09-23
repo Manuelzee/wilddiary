@@ -16,7 +16,7 @@ COPY . .
 # Use /tmp for SQLite database (writable on Render free plan)
 ENV DATABASE_PATH=/tmp/wilddiary.db
 
-EXPOSE 5000
+EXPOSE 10000
 
 # Run with tuned Gunicorn WSGI configuration
 CMD ["gunicorn", "--config", "gunicorn.conf.py", "app:app"]

@@ -159,6 +159,10 @@ def register_routes(app):
         g.jwt_secret = app.config["JWT_SECRET"]
         g.jwt_ttl = app.config["JWT_TTL_HOURS"]
 
+    @app.route("/", methods=["GET", "HEAD"])
+    def root():
+        return jsonify(status="ok", service="wilddiary-api", timestamp=dt.datetime.now(dt.timezone.utc).isoformat()), 200
+
     @app.get("/api/status")
     def status():
         return jsonify(status="healthy", timestamp=dt.datetime.now(dt.timezone.utc).isoformat())

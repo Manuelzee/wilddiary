@@ -2,7 +2,7 @@ import multiprocessing
 import os
 
 # Server socket
-bind = f"{os.getenv('HOST', '0.0.0.0')}:{os.getenv('PORT', '5000')}"
+bind = f"{os.getenv('HOST', '0.0.0.0')}:{os.getenv('PORT', '10000')}"
 backlog = 2048
 
 # All workers must receive the same JWT_SECRET from the environment. The app

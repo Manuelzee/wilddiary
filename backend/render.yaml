@@ -4,11 +4,12 @@ services:
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --config gunicorn.conf.py app:app
+    healthCheckPath: /api/health
     envVars:
       - key: APP_ENV
         value: production
       - key: PORT
-        value: 5000
+        value: 10000
       - key: DATABASE_PATH
         value: /tmp/wilddiary.db
       - key: CORS_ORIGINS
