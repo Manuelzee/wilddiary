@@ -13,9 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend application source
 COPY . .
 
-# Ensure data directory exists for persistent SQLite database
-RUN mkdir -p /data && chmod 777 /data
-ENV DATABASE_PATH=/data/wilddiary.db
+# Use /tmp for SQLite database (writable on Render free plan)
+ENV DATABASE_PATH=/tmp/wilddiary.db
 
 EXPOSE 5000
 
