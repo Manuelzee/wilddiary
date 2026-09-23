@@ -1,4 +1,4 @@
-export const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
+export const API_URL = (import.meta.env.VITE_API_URL || 'https://wilddiary.onrender.com/api').replace(/\/$/, '');
 
 export async function apiRequest(path, options = {}) {
   const token = localStorage.getItem('token');
