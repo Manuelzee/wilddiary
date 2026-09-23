@@ -5,32 +5,26 @@ import { useColorMode } from '@chakra-ui/react';
 import {
   Box, Flex, VStack, Heading, Text, Button, Input, FormControl,
   FormLabel, InputGroup, InputLeftElement, InputRightElement,
-  IconButton, Divider, HStack, Link, Image, useToast, Select,
+  IconButton, HStack, Link, Image, useToast, Select,
 } from '@chakra-ui/react';
 import {
   MdEmail, MdLock, MdPerson, MdVisibility, MdVisibilityOff,
-  MdArrowForward, MdMenuBook, MdVerifiedUser,
-  MdDarkMode, MdLightMode,
+  MdArrowForward,
 } from 'react-icons/md';
 
-// ─── Dark/Light mode toggle button ───────────────────────────────────────────
-function ColorToggle() {
-  const { colorMode, toggleColorMode } = useColorMode();
-  return (
-    <IconButton
-      aria-label="Toggle color mode"
-      icon={colorMode === 'dark' ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
-      onClick={toggleColorMode}
-      variant="ghost"
-      borderRadius="full"
-      position="fixed"
-      top={4}
-      right={4}
-      zIndex={100}
-      size="md"
-    />
-  );
-}
+// ─── Helper: generate year/month/day options ──────────────────────────────────
+const days = Array.from({ length: 31 }, (_, i) => i + 1);
+const months = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
+];
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+const makeUsername = (firstName, surname) => `${firstName}_${surname}`
+  .replace(/[^A-Za-z0-9_]/g, '')
+  .replace(/_+/g, '_')
+  .replace(/^_|_$/g, '')
+  .slice(0, 30);
 
 // ─── Auth form (right panel) ──────────────────────────────────────────────────
 function AuthPanel() {
@@ -44,7 +38,8 @@ function AuthPanel() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: '', email: '', password: '', role: 'user',
+    firstName: '', surname: '', email: '', password: '',
+    dobDay: '', dobMonth: '', dobYear: '', gender: '',
   });
 
   const handleChange = (e) =>
@@ -54,11 +49,11 @@ function AuthPanel() {
     e.preventDefault();
     setLoading(true);
     if (isRegister) {
-      const res = await register(formData.username, formData.email, formData.password, formData.role);
+      const username = makeUsername(formData.firstName, formData.surname);
+      const res = await register(username, formData.email, formData.password);
       if (res.success) {
-        toast({ title: 'Account created! You can now sign in.', status: 'success', duration: 3000, isClosable: true });
-        setIsRegister(false);
-        setFormData({ ...formData, password: '' });
+        toast({ title: 'Account created!', status: 'success', duration: 3000, isClosable: true });
+        navigate('/feed');
       } else {
         toast({ title: res.error || 'Registration failed.', status: 'error', duration: 3000, isClosable: true });
       }
@@ -72,50 +67,109 @@ function AuthPanel() {
 
   const switchMode = (toReg) => {
     setIsRegister(toReg);
-    setFormData({ username: '', email: '', password: '', role: 'user' });
+    setFormData({ firstName: '', surname: '', email: '', password: '', dobDay: '', dobMonth: '', dobYear: '', gender: '' });
   };
 
   const iconColor = isDark ? '#555' : '#aaa';
   const borderColor = isDark ? 'whiteAlpha.200' : 'gray.200';
   const subtleText = 'gray.500';
+  const selectSx = { '& option': { bg: isDark ? '#1a1a1a' : '#fff', color: isDark ? '#fff' : '#000' } };
 
   return (
-    <Box as="form" onSubmit={handleSubmit} w="100%" maxW="360px">
+    <Box as="form" onSubmit={handleSubmit} w="100%" maxW="420px">
+
       <Heading
-        fontSize={{ base: '3xl', md: '4xl' }}
-        fontWeight="900"
+        as="h6"
+        fontSize="md"
+        fontWeight="700"
         fontFamily="'Poppins', sans-serif"
-        mb={8}
-        lineHeight="1.1"
-        letterSpacing="-0.5px"
+        mb={6}
+        lineHeight="1.3"
+        textAlign="center"
+        color="black"
       >
-        Writing your heart<br />on the web
+        {isRegister ? 'Create an account' : 'Sign in to your diary'}
       </Heading>
 
       <VStack spacing={4} align="stretch">
+        {/* ── Registration fields ── */}
         {isRegister && (
-          <FormControl>
-            <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif">Username</FormLabel>
-            <InputGroup>
-              <InputLeftElement pointerEvents="none" h="full">
-                <MdPerson size={18} color={iconColor} />
-              </InputLeftElement>
-              <Input
-                name="username"
-                placeholder="e.g. HopefulBear"
-                value={formData.username}
-                onChange={handleChange}
-                required
-                size="lg"
-                pl="42px"
-                fontFamily="'Poppins', sans-serif"
-              />
-            </InputGroup>
-          </FormControl>
+          <>
+            {/* Name row */}
+            <FormControl>
+              <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif" color="black">Name</FormLabel>
+              <HStack>
+                <Input
+                  name="firstName"
+                  placeholder="First name"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                  size="lg"
+                  fontFamily="'Poppins', sans-serif"
+                />
+                <Input
+                  name="surname"
+                  placeholder="Surname"
+                  value={formData.surname}
+                  onChange={handleChange}
+                  required
+                  size="lg"
+                  fontFamily="'Poppins', sans-serif"
+                />
+              </HStack>
+            </FormControl>
+
+            {/* Date of birth */}
+            <FormControl>
+              <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif" color="black">Date of birth</FormLabel>
+              <HStack>
+                <Select
+                  name="dobDay" placeholder="Day" value={formData.dobDay}
+                  onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                  borderColor={borderColor} sx={selectSx}
+                >
+                  {days.map(d => <option key={d} value={d}>{d}</option>)}
+                </Select>
+                <Select
+                  name="dobMonth" placeholder="Month" value={formData.dobMonth}
+                  onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                  borderColor={borderColor} sx={selectSx}
+                >
+                  {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+                </Select>
+                <Select
+                  name="dobYear" placeholder="Year" value={formData.dobYear}
+                  onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                  borderColor={borderColor} sx={selectSx}
+                >
+                  {years.map(y => <option key={y} value={y}>{y}</option>)}
+                </Select>
+              </HStack>
+            </FormControl>
+
+            {/* Gender */}
+            <FormControl>
+              <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif" color="black">Gender</FormLabel>
+              <Select
+                name="gender" placeholder="Select your gender" value={formData.gender}
+                onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                borderColor={borderColor} sx={selectSx}
+              >
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+                <option value="prefer_not">Prefer not to say</option>
+              </Select>
+            </FormControl>
+          </>
         )}
 
+        {/* Email */}
         <FormControl>
-          <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif">Email address</FormLabel>
+          <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif" color="black">
+            {isRegister ? 'Mobile number or email address' : 'Email address'}
+          </FormLabel>
           <InputGroup>
             <InputLeftElement pointerEvents="none" h="full">
               <MdEmail size={18} color={iconColor} />
@@ -123,7 +177,7 @@ function AuthPanel() {
             <Input
               name="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder={isRegister ? 'Mobile number or email address' : 'you@example.com'}
               value={formData.email}
               onChange={handleChange}
               required
@@ -134,8 +188,9 @@ function AuthPanel() {
           </InputGroup>
         </FormControl>
 
+        {/* Password */}
         <FormControl>
-          <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif">Password</FormLabel>
+          <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif" color="black">Password</FormLabel>
           <InputGroup>
             <InputLeftElement pointerEvents="none" h="full">
               <MdLock size={18} color={iconColor} />
@@ -165,32 +220,7 @@ function AuthPanel() {
           </InputGroup>
         </FormControl>
 
-        {isRegister && (
-          <FormControl>
-            <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif">I am joining as</FormLabel>
-            <InputGroup>
-              <InputLeftElement pointerEvents="none" h="full">
-                <MdVerifiedUser size={18} color={iconColor} />
-              </InputLeftElement>
-              <Select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                size="lg"
-                pl="42px"
-                fontFamily="'Poppins', sans-serif"
-                border="1px solid"
-                borderColor={borderColor}
-                borderRadius="4px"
-                sx={{ '& option': { bg: isDark ? '#000' : '#fff', color: isDark ? '#fff' : '#000' } }}
-              >
-                <option value="user">Community Member</option>
-                <option value="counselor">Verified Counselor</option>
-              </Select>
-            </InputGroup>
-          </FormControl>
-        )}
-
+        {/* Submit */}
         <Button
           type="submit"
           size="lg"
@@ -203,13 +233,14 @@ function AuthPanel() {
           borderRadius="full"
           rightIcon={!loading ? <MdArrowForward size={18} /> : undefined}
         >
-          {isRegister ? 'Create Account' : 'Sign In'}
+          {isRegister ? 'Submit' : 'Sign In'}
         </Button>
 
+        {/* Switch mode link */}
         <Text fontSize="sm" color={subtleText} textAlign="center" fontFamily="'Poppins', sans-serif">
           {isRegister ? (
             <>
-              Already have an account?{' '}
+              I already have an account.{' '}
               <Link as="button" type="button" color="brand.500" fontWeight="700"
                 _hover={{ textDecoration: 'underline' }} onClick={() => switchMode(false)}
                 fontFamily="'Poppins', sans-serif">
@@ -218,7 +249,7 @@ function AuthPanel() {
             </>
           ) : (
             <>
-              New to Wild Diary?{' '}
+              Don&apos;t have an account?{' '}
               <Link as="button" type="button" color="brand.500" fontWeight="700"
                 _hover={{ textDecoration: 'underline' }} onClick={() => switchMode(true)}
                 fontFamily="'Poppins', sans-serif">
@@ -227,55 +258,30 @@ function AuthPanel() {
             </>
           )}
         </Text>
-
-        <HStack>
-          <Divider borderColor={borderColor} />
-          <Text fontSize="xs" color={subtleText} px={2} flexShrink={0}>or</Text>
-          <Divider borderColor={borderColor} />
-        </HStack>
-
-        <Button
-          as={RouterLink}
-          to="/feed"
-          size="lg"
-          variant="outline"
-          w="100%"
-          fontFamily="'Poppins', sans-serif"
-          fontWeight="600"
-          fontSize="sm"
-          borderRadius="full"
-          leftIcon={<MdMenuBook size={18} />}
-        >
-          Continue as Guest
-        </Button>
       </VStack>
 
-      <Text fontSize="xs" color={subtleText} mt={6} lineHeight="1.6" fontFamily="'Poppins', sans-serif">
-        🛡️ By continuing, you agree to our{' '}
-        <Link href="#" color={subtleText} textDecoration="underline">Terms</Link>,{' '}
-        <Link href="#" color={subtleText} textDecoration="underline">Privacy Policy</Link> and{' '}
-        <Link href="#" color={subtleText} textDecoration="underline">Community Rules</Link>.
-      </Text>
+      {isRegister && (
+        <Text fontSize="xs" color={subtleText} mt={6} lineHeight="1.6" fontFamily="'Poppins', sans-serif">
+          By tapping Submit, you agree to our{' '}
+          <Link href="#" color={subtleText} textDecoration="underline">Terms</Link>,{' '}
+          <Link href="#" color={subtleText} textDecoration="underline">Privacy Policy</Link> and{' '}
+          <Link href="#" color={subtleText} textDecoration="underline">Community Rules</Link>.
+        </Text>
+      )}
     </Box>
   );
 }
 
 // ─── Authenticated landing ────────────────────────────────────────────────────
 function AuthenticatedHome({ user }) {
-  const { colorMode, toggleColorMode } = useColorMode();
+  const { colorMode } = useColorMode();
   const isDark = colorMode === 'dark';
 
   return (
     <Flex minH="100dvh" align="center" justify="center" direction="column" gap={10}
       px={6} py={16} bg={isDark ? 'black' : 'white'} position="relative">
-      <IconButton
-        aria-label="Toggle color mode"
-        icon={isDark ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
-        onClick={toggleColorMode}
-        variant="ghost" borderRadius="full" position="fixed" top={4} right={4} zIndex={100} size="md"
-      />
       <VStack spacing={4} textAlign="center" maxW="500px">
-        <Image src="/diarylogo.svg" alt="Wild Diary" boxSize="96px" />
+        <Image src="/app-logo.jpg" alt="Logo" boxSize="96px" borderRadius="full" objectFit="cover" />
         <Heading fontSize={{ base: '3xl', md: '4xl' }} fontWeight="900" fontFamily="'Poppins', sans-serif" lineHeight="1.1">
           Welcome back,{' '}
           <Box as="span" color="brand.500" textTransform="capitalize">{user?.username}</Box>
@@ -296,41 +302,64 @@ function AuthenticatedHome({ user }) {
   );
 }
 
-// ─── Unauthenticated split layout (X.com style) ───────────────────────────────
+// ─── Unauthenticated split layout ─────────────────────────────────────────────
 function UnauthenticatedHome() {
   const { colorMode } = useColorMode();
   const isDark = colorMode === 'dark';
 
   return (
-    <Flex minH="100dvh" bg={isDark ? 'black' : 'white'} position="relative">
-      <ColorToggle />
-
-      {/* LEFT — Large logo */}
-      <Flex flex="1" align="center" justify="center" display={{ base: 'none', md: 'flex' }} px={8}>
-        <Image
-          src="/diarylogo.svg"
-          alt="Wild Diary logo"
-          w={{ md: '280px', lg: '360px', xl: '420px' }}
-          maxW="90%"
-        />
-        <Text fontSize="4xl" fontWeight="1000" fontFamily="'Poppins', sans-serif" lineHeight="1.1" color='blue'>
-          Wild Diary
-        </Text>
+    <Flex minH="100dvh" bg="white" position="relative">
+      {/* LEFT — Logo + Hero collage + tagline */}
+      <Flex flex="1" align="center" justify="center" display={{ base: 'none', md: 'flex' }} px={8}
+        bg="white">
+        <Box w="100%" maxW="760px" h={{ md: '600px', lg: '680px' }} position="relative">
+          <Image src="/app-logo.jpg" alt="Logo" boxSize="48px" borderRadius="full" objectFit="cover"
+            position="absolute" top={0} left={0} zIndex={2} />
+          <Image
+            src="/hero-collage.jpg"
+            alt="Mental health journaling"
+            position="absolute"
+            top={{ md: 30, lg: 20 }}
+            right={0}
+            w={{ md: '68%', lg: '70%' }}
+            h={{ md: '78%', lg: '82%' }}
+            borderRadius="2xl"
+            objectFit="cover"
+            boxShadow="2xl"
+          />
+          <Text
+            position="absolute"
+            left={0}
+            bottom={{ md: 10, lg: 16 }}
+            zIndex={2}
+            fontSize="36px"
+            fontWeight="800"
+            fontFamily="'Poppins', sans-serif"
+            lineHeight="1.18"
+            color="black"
+            letterSpacing="-0.8px"
+            maxW={{ md: '190px', lg: '230px' }}
+          >
+            A safe, supportive space to share{' '}
+            <Box as="span" color="blue.500">struggles.</Box>
+          </Text>
+        </Box>
       </Flex>
+
       {/* RIGHT — Form */}
       <Flex
-        flex={{ base: '1', md: '0 0 480px' }}
+        flex={{ base: '1', md: '0 0 520px' }}
         direction="column"
         justify="center"
+        align="center"
         px={{ base: 6, md: 10 }}
         py={12}
         borderLeft={{ md: '1px solid' }}
         borderColor={{ md: isDark ? 'whiteAlpha.100' : 'gray.100' }}
         minH="100dvh"
+        overflowY="auto"
+        bg="white"
       >
-        <Box display={{ base: 'flex', md: 'none' }} justifyContent="center" mb={8}>
-          <Image src="/logo.svg" alt="Wild Diary" boxSize="80px" />
-        </Box>
         <AuthPanel />
       </Flex>
     </Flex>

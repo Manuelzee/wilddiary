@@ -16,6 +16,6 @@ services:
       - key: DATABASE_PATH
         value: /data/wilddiary.db
       - key: CORS_ORIGINS
-        value: "*"
+        value: https://wilddiary.vercel.app,https://wilddiary.netlify.app
       - key: JWT_SECRET
         generateValue: true

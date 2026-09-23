@@ -26,6 +26,7 @@ export function AuthProvider({ children }) {
         if (active) setLoading(false);
         return;
       }
+      setLoading(true);
       try {
         const data = await apiRequest('/auth/me');
         if (active) setUser(data.user);
@@ -44,7 +45,9 @@ export function AuthProvider({ children }) {
       const data = await apiRequest('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
       saveSession(data);
       return { success: true };
-    } catch (error) { return { success: false, error: error.message }; }
+    } catch (error) {
+      return { success: false, error: error.message, status: error.status, code: error.code };
+    }
   };
 
   const register = async (username, email, password) => {
@@ -52,7 +55,9 @@ export function AuthProvider({ children }) {
       const data = await apiRequest('/auth/register', { method: 'POST', body: JSON.stringify({ username, email, password }) });
       saveSession(data);
       return { success: true };
-    } catch (error) { return { success: false, error: error.message }; }
+    } catch (error) {
+      return { success: false, error: error.message, status: error.status, code: error.code };
+    }
   };
 
   const updateProfile = async (values) => {

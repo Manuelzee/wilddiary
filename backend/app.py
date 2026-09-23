@@ -8,7 +8,7 @@ from functools import wraps
 
 import jwt
 from dotenv import load_dotenv
-from flask import Flask, g, jsonify, request
+from flask import Flask, current_app, g, jsonify, request
 from flask_cors import CORS
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -25,6 +25,7 @@ TOXIC_PHRASES = {"kill yourself", "kys", "retard", "worthless", "suicide"}
 
 def create_app(test_config=None):
     app = Flask(__name__)
+    is_production = os.getenv("APP_ENV", "development").lower() == "production"
     app.config.update(
         JWT_SECRET=os.getenv("JWT_SECRET", ""),
         JWT_TTL_HOURS=int(os.getenv("JWT_TTL_HOURS", "24")),
@@ -34,8 +35,12 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
     if not app.config["JWT_SECRET"]:
-        app.logger.warning("JWT_SECRET is not set; generating a secure runtime secret for this instance.")
-        app.config["JWT_SECRET"] = os.getenv("JWT_SECRET") or hashlib.sha256(f"wilddiary-{os.urandom(24)}".encode()).hexdigest()
+        if is_production and not app.config.get("TESTING"):
+            raise RuntimeError("JWT_SECRET must be set in production.")
+        app.logger.warning("JWT_SECRET is not set; using the development-only signing secret.")
+        app.config["JWT_SECRET"] = "development-only-change-me"
+    if is_production and not app.config.get("TESTING") and len(app.config["JWT_SECRET"]) < 32:
+        raise RuntimeError("JWT_SECRET must be at least 32 characters in production.")
 
     cors_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000")
     if cors_origins_env.strip() == "*":
@@ -93,7 +98,11 @@ def optional_user():
         if not user or payload.get("ver", 0) != user.get("token_version", 0):
             return None
         return user
-    except (jwt.PyJWTError, KeyError, TypeError, ValueError):
+    except jwt.ExpiredSignatureError:
+        current_app.logger.info("Authentication rejected: expired JWT.")
+        return None
+    except (jwt.PyJWTError, KeyError, TypeError, ValueError) as error:
+        current_app.logger.warning("Authentication rejected: invalid JWT (%s).", type(error).__name__)
         return None
 
 
@@ -289,27 +298,30 @@ def register_routes(app):
             with transaction() as connection:
                 connection.execute("INSERT OR IGNORE INTO user_preferences(user_id) VALUES(?)", (user["id"],))
             prefs = fetch_one("SELECT * FROM user_preferences WHERE user_id=?", (user["id"],))
-        return jsonify(preferences=prefs or {"user_id": user["id"], "default_anonymous": 1, "email_notifications": 1, "reaction_notifications": 1, "counselor_notifications": 1})
+        return jsonify(preferences=prefs or {"user_id": user["id"], "default_anonymous": 1, "email_notifications": 1, "reaction_notifications": 1, "counselor_notifications": 1, "ai_support_enabled": 0})
 
     @app.patch("/api/users/me/preferences")
     @auth_required
     def update_preferences(user):
         data = request.get_json(silent=True) or {}
-        default_anon = 1 if data.get("default_anonymous", True) else 0
-        email_notif = 1 if data.get("email_notifications", True) else 0
-        react_notif = 1 if data.get("reaction_notifications", True) else 0
-        counselor_notif = 1 if data.get("counselor_notifications", True) else 0
+        existing = fetch_one("SELECT * FROM user_preferences WHERE user_id=?", (user["id"],)) or {}
+        default_anon = 1 if data.get("default_anonymous", existing.get("default_anonymous", 1)) else 0
+        email_notif = 1 if data.get("email_notifications", existing.get("email_notifications", 1)) else 0
+        react_notif = 1 if data.get("reaction_notifications", existing.get("reaction_notifications", 1)) else 0
+        counselor_notif = 1 if data.get("counselor_notifications", existing.get("counselor_notifications", 1)) else 0
+        ai_support = 1 if data.get("ai_support_enabled", existing.get("ai_support_enabled", 0)) else 0
         with transaction() as connection:
             connection.execute("""
-                INSERT INTO user_preferences(user_id, default_anonymous, email_notifications, reaction_notifications, counselor_notifications, updated_at)
-                VALUES(?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                INSERT INTO user_preferences(user_id, default_anonymous, email_notifications, reaction_notifications, counselor_notifications, ai_support_enabled, updated_at)
+                VALUES(?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                 ON CONFLICT(user_id) DO UPDATE SET
                     default_anonymous=excluded.default_anonymous,
                     email_notifications=excluded.email_notifications,
                     reaction_notifications=excluded.reaction_notifications,
                     counselor_notifications=excluded.counselor_notifications,
+                    ai_support_enabled=excluded.ai_support_enabled,
                     updated_at=CURRENT_TIMESTAMP
-            """, (user["id"], default_anon, email_notif, react_notif, counselor_notif))
+            """, (user["id"], default_anon, email_notif, react_notif, counselor_notif, ai_support))
             updated = connection.execute("SELECT * FROM user_preferences WHERE user_id=?", (user["id"],)).fetchone()
         return jsonify(preferences=dict(updated))
 
@@ -482,8 +494,11 @@ def register_routes(app):
 
     @app.post("/api/posts/<int:post_id>/ai-insight")
     @auth_required
-    def ai_insight(_user, post_id):
-        post = fetch_one("SELECT content, category FROM posts WHERE id=? AND status='active'", (post_id,))
+    def ai_insight(user, post_id):
+        preferences = fetch_one("SELECT ai_support_enabled FROM user_preferences WHERE user_id=?", (user["id"],))
+        if not preferences or not preferences.get("ai_support_enabled"):
+            return api_error("Enable AI support in Settings before requesting an insight.", 403, "ai_support_disabled")
+        post = fetch_one("SELECT content, category FROM posts WHERE id=? AND user_id=? AND status='active'", (post_id, user["id"]))
         if not post: return api_error("Post not found.", 404, "not_found")
         text = generate_post_insight(post["content"], post["category"])
         with transaction() as connection:

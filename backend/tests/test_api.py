@@ -2,6 +2,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 TEST_DIR = tempfile.TemporaryDirectory()
@@ -36,6 +37,45 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(duplicate.status_code, 409)
         weak = self.register("member_three", "member3@example.com", "short")
         self.assertEqual(weak.status_code, 400)
+
+    def test_login_success_invalid_credentials_and_session_validation(self):
+        registered = self.register("login_member", "login@example.com")
+        self.assertEqual(registered.status_code, 201)
+
+        valid = self.client.post("/api/auth/login", json={
+            "email": " LOGIN@example.com ", "password": "correct-horse-battery",
+        })
+        self.assertEqual(valid.status_code, 200)
+        self.assertEqual(valid.get_json()["user"]["email"], "login@example.com")
+        me = self.client.get("/api/auth/me", headers=self.auth(valid))
+        self.assertEqual(me.status_code, 200)
+
+        invalid_password = self.client.post("/api/auth/login", json={
+            "email": "login@example.com", "password": "wrong-password",
+        })
+        self.assertEqual(invalid_password.status_code, 401)
+        self.assertEqual(invalid_password.get_json()["code"], "invalid_credentials")
+
+        invalid_user = self.client.post("/api/auth/login", json={
+            "email": "missing@example.com", "password": "wrong-password",
+        })
+        self.assertEqual(invalid_user.status_code, 401)
+        self.assertEqual(invalid_user.get_json()["code"], "invalid_credentials")
+
+    def test_token_is_valid_across_app_instances_with_shared_secret(self):
+        second_app = create_app({"TESTING": True, "JWT_SECRET": "test-secret"})
+        registered = self.register("worker_member", "worker@example.com")
+        response = second_app.test_client().get("/api/auth/me", headers=self.auth(registered))
+        self.assertEqual(response.status_code, 200)
+
+    def test_production_requires_jwt_secret(self):
+        with patch.dict(os.environ, {"APP_ENV": "production"}, clear=False):
+            with patch.dict(os.environ, {"JWT_SECRET": ""}, clear=False):
+                with self.assertRaisesRegex(RuntimeError, "JWT_SECRET must be set"):
+                    create_app()
+            with patch.dict(os.environ, {"JWT_SECRET": "too-short"}, clear=False):
+                with self.assertRaisesRegex(RuntimeError, "at least 32 characters"):
+                    create_app()
 
     def test_full_post_comment_reaction_flow_and_anonymity(self):
         owner = self.register("post_owner", "owner@example.com")
@@ -178,9 +218,10 @@ class ApiTestCase(unittest.TestCase):
         self.client.post("/api/diary", headers=auth_header, json={
             "title": "Private Entry", "content": "Confidential thought", "mood": "hopeful",
         })
-        self.client.post("/api/posts", headers=auth_header, json={
+        created_post = self.client.post("/api/posts", headers=auth_header, json={
             "content": "My public post for testing export and user post listing", "category": "financial",
         })
+        post_id = created_post.get_json()["post_id"]
 
         # Test GET /api/users/me/posts
         my_posts = self.client.get("/api/users/me/posts", headers=auth_header)
@@ -201,6 +242,11 @@ class ApiTestCase(unittest.TestCase):
         pref_get = self.client.get("/api/users/me/preferences", headers=auth_header)
         self.assertEqual(pref_get.status_code, 200)
         self.assertEqual(pref_get.get_json()["preferences"]["default_anonymous"], 1)
+        self.assertEqual(pref_get.get_json()["preferences"]["ai_support_enabled"], 0)
+
+        disabled_ai = self.client.post(f"/api/posts/{post_id}/ai-insight", headers=auth_header)
+        self.assertEqual(disabled_ai.status_code, 403)
+        self.assertEqual(disabled_ai.get_json()["code"], "ai_support_disabled")
 
         pref_patch = self.client.patch("/api/users/me/preferences", headers=auth_header, json={
             "default_anonymous": False,
@@ -209,6 +255,17 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(pref_patch.status_code, 200)
         self.assertEqual(pref_patch.get_json()["preferences"]["default_anonymous"], 0)
         self.assertEqual(pref_patch.get_json()["preferences"]["email_notifications"], 0)
+
+        enable_ai = self.client.patch("/api/users/me/preferences", headers=auth_header, json={"ai_support_enabled": True})
+        self.assertEqual(enable_ai.status_code, 200)
+        self.assertEqual(enable_ai.get_json()["preferences"]["ai_support_enabled"], 1)
+        # Partial preference updates must preserve earlier choices.
+        self.assertEqual(enable_ai.get_json()["preferences"]["default_anonymous"], 0)
+        self.assertEqual(enable_ai.get_json()["preferences"]["email_notifications"], 0)
+
+        enabled_ai = self.client.post(f"/api/posts/{post_id}/ai-insight", headers=auth_header)
+        self.assertEqual(enabled_ai.status_code, 200)
+        self.assertIn("insight", enabled_ai.get_json())
 
     def test_post_search_pagination_and_admin_actions(self):
         creator = self.register("search_creator", "search_creator@example.com")
@@ -242,4 +299,3 @@ class ApiTestCase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

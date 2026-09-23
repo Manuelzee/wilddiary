@@ -28,24 +28,30 @@ const Safety = lazy(() => import('./Pages/Safety'));
 // ─── Inner layout (reads location for full-bleed homepage detection) ──────────
 function AppLayout() {
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
-  // Unauthenticated homepage gets full-bleed — no Navbar/footer wrapping
+  if (loading) {
+    return <Flex minH="100dvh" align="center" justify="center">Restoring your session…</Flex>;
+  }
+
+  // Unauthenticated homepage and auth page get full-bleed — no Navbar/footer wrapping
   const isHomePage = location.pathname === '/';
   const isFeedPage  = location.pathname === '/feed';
-  const isFullBleed = isHomePage && !isAuthenticated;
+  const isAuthPage  = location.pathname === '/auth';
+  const isFullBleed = (isHomePage && !isAuthenticated) || isAuthPage;
 
   if (isFullBleed) {
     return (
       <Suspense fallback={<Flex flex="1" align="center" justify="center">Loading Wild Diary…</Flex>}><Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/auth" element={<Auth />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes></Suspense>
     );
   }
 
   // Feed page manages its own 3-column layout — give it the full viewport width
-  const isNoConstraint = isHomePage || isFeedPage || location.pathname === '/settings' || location.pathname === '/chat';
+  const isNoConstraint = isHomePage || isFeedPage || location.pathname === '/settings' || location.pathname === '/chat' || location.pathname === '/auth';
 
   return (
     <Flex direction="column" minH="100dvh">
@@ -66,16 +72,16 @@ function AppLayout() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/post/:id" element={<PostDetail />} />
-          <Route path="/create" element={<CreatePost />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/ai" element={<Chat />} />
-          <Route path="/diary" element={<Diary />} />
-          <Route path="/diary/:id" element={<DiaryEditor />} />
-          <Route path="/insights" element={<Insights />} />
+          <Route path="/create" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/ai" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/diary" element={<ProtectedRoute><Diary /></ProtectedRoute>} />
+          <Route path="/diary/:id" element={<ProtectedRoute><DiaryEditor /></ProtectedRoute>} />
+          <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
           <Route path="/counselors" element={<Counselors />} />
-          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="/safety" element={<Safety />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes></Suspense>
@@ -112,6 +118,19 @@ function AppLayout() {
       </Box>
     </Flex>
   );
+}
+
+function ProtectedRoute({ children }) {
+  const location = useLocation();
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <Flex flex="1" align="center" justify="center">Restoring your session…</Flex>;
+  }
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace state={{ from: location }} />;
+  }
+  return children;
 }
 
 function App() {

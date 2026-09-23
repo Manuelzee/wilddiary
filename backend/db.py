@@ -132,6 +132,7 @@ CREATE TABLE IF NOT EXISTS user_preferences (
     email_notifications INTEGER NOT NULL DEFAULT 1 CHECK(email_notifications IN (0, 1)),
     reaction_notifications INTEGER NOT NULL DEFAULT 1 CHECK(reaction_notifications IN (0, 1)),
     counselor_notifications INTEGER NOT NULL DEFAULT 1 CHECK(counselor_notifications IN (0, 1)),
+    ai_support_enabled INTEGER NOT NULL DEFAULT 0 CHECK(ai_support_enabled IN (0, 1)),
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -217,6 +218,9 @@ def init_db():
         if "updated_at" not in user_columns:
             connection.execute("ALTER TABLE users ADD COLUMN updated_at TEXT")
             connection.execute("UPDATE users SET updated_at=CURRENT_TIMESTAMP WHERE updated_at IS NULL")
+        preference_columns = _columns(connection, "user_preferences")
+        if "ai_support_enabled" not in preference_columns:
+            connection.execute("ALTER TABLE user_preferences ADD COLUMN ai_support_enabled INTEGER NOT NULL DEFAULT 0")
         connection.commit()
     finally:
         connection.close()

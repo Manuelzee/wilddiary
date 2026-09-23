@@ -9,7 +9,7 @@ import {
 } from '@chakra-ui/react';
 import {
   MdHome, MdMenuBook, MdInsights, MdAutoAwesome, MdSupportAgent,
-  MdPersonAdd, MdNotifications, MdDarkMode, MdLightMode, MdLogout, MdChat,
+  MdPersonAdd, MdNotifications, MdLogout, MdChat,
   MdSettings,
 } from 'react-icons/md';
 
@@ -23,7 +23,7 @@ const TABS = [
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
-  const { colorMode, toggleColorMode } = useColorMode();
+  const { colorMode } = useColorMode();
   const navigate = useNavigate();
   const location = useLocation();
   const isDark = colorMode === 'dark';
@@ -117,13 +117,6 @@ export default function Navbar() {
 
         {/* ── RIGHT: Actions ── */}
         <HStack spacing={2} flex="0 0 auto" minW={{ base: 'auto', lg: '260px' }} justify="flex-end">
-          <IconButton
-            aria-label="Toggle colour mode"
-            icon={isDark ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
-            onClick={toggleColorMode}
-            variant="ghost" borderRadius="full" size="sm"
-          />
-
           {isAuthenticated ? (
             <>
               <Tooltip label="Find Counselors" hasArrow>

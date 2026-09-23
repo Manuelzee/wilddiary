@@ -5,6 +5,8 @@ import os
 bind = f"{os.getenv('HOST', '0.0.0.0')}:{os.getenv('PORT', '5000')}"
 backlog = 2048
 
+# All workers must receive the same JWT_SECRET from the environment. The app
+# intentionally refuses to start in production when it is missing.
 # Worker processes & threading optimized for concurrency
 workers = int(os.getenv('WEB_CONCURRENCY', multiprocessing.cpu_count() * 2 + 1))
 worker_class = "gthread"

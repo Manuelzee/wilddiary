@@ -86,10 +86,10 @@ const components = {
           bg: 'transparent',
           border: '1px solid',
           borderColor: props.colorMode === 'dark' ? 'whiteAlpha.300' : 'gray.300',
-          color: props.colorMode === 'dark' ? 'white' : 'black',
+          color: 'black',
           borderRadius: '4px',
           _placeholder: {
-            color: props.colorMode === 'dark' ? 'gray.500' : 'gray.400',
+            color: 'gray.400',
           },
           _focus: {
             borderColor: 'brand.500',
@@ -104,12 +104,12 @@ const components = {
     defaultProps: { variant: 'outline' },
   },
   FormLabel: {
-    baseStyle: (props) => ({
+    baseStyle: {
       fontFamily: `'Poppins', sans-serif`,
       fontSize: 'sm',
       fontWeight: '500',
-      color: props.colorMode === 'dark' ? 'gray.300' : 'gray.700',
-    }),
+      color: 'black',
+    },
   },
 };
 

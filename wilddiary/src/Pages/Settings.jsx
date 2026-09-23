@@ -58,7 +58,7 @@ const SECTIONS = [
     description: 'Customise how your diary works and how your entries are displayed.',
     items: [
       { id: 'default-category',  label: 'Default post category',          description: 'Set the default category for new diary entries',                          icon: MdCategory    },
-      { id: 'ai-insights',       label: 'AI-powered insights',             description: 'Enable AI analysis to suggest personalised coping strategies',            icon: MdAutoAwesome },
+      { id: 'ai-insights',       label: 'AI support',                       description: 'Control optional AI support for your posts',                              icon: MdAutoAwesome },
       { id: 'anonymous-default', label: 'Post anonymously by default',     description: 'New posts will use an anonymous identity unless you override it per post', icon: MdVisibility  },
     ],
   },
@@ -553,6 +553,68 @@ function DarkModePanel({ c, isDark, toggleColorMode }) {
   );
 }
 
+function AiSupportPanel({ c }) {
+  const [enabled, setEnabled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const toast = useToast();
+
+  useEffect(() => {
+    let active = true;
+    discoveryService.getPreferences()
+      .then(({ preferences }) => {
+        if (active) setEnabled(Boolean(preferences?.ai_support_enabled));
+      })
+      .catch((error) => {
+        if (active) toast({ title: 'Could not load AI support setting', description: error.message, status: 'error' });
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [toast]);
+
+  const updateSetting = async (nextValue) => {
+    setSaving(true);
+    try {
+      await discoveryService.updatePreferences({ ai_support_enabled: nextValue });
+      setEnabled(nextValue);
+      toast({
+        title: nextValue ? 'AI support enabled' : 'AI support disabled',
+        description: nextValue
+          ? 'You can choose whether to request AI support after publishing each post.'
+          : 'Your posts will not be shared with the AI support feature.',
+        status: 'success', duration: 3500, isClosable: true,
+      });
+    } catch (error) {
+      toast({ title: 'Could not update AI support', description: error.message, status: 'error' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <VStack spacing={5} align="stretch">
+      <Box p={4} bg={c.d ? 'rgba(124,58,237,0.08)' : 'purple.50'} borderRadius="xl" border="1px solid" borderColor={c.d ? 'purple.800' : 'purple.200'}>
+        <HStack mb={2}><MdAutoAwesome size={18} color="#7c3aed" /><Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">Optional AI support</Text></HStack>
+        <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif" lineHeight="1.7">
+          AI support is off by default. When enabled, Wild Diary will still ask for your permission after every post before generating a supportive reflection. Choosing “Not now” never sends that post for AI analysis.
+        </Text>
+      </Box>
+      <Flex p={4} bg={c.inputBg} borderRadius="xl" align="center" justify="space-between" gap={4}>
+        <Box>
+          <Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">Enable AI support</Text>
+          <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif">Allow the per-post AI support option</Text>
+        </Box>
+        <Switch
+          colorScheme="purple"
+          isChecked={enabled}
+          isDisabled={loading || saving}
+          onChange={(event) => updateSetting(event.target.checked)}
+        />
+      </Flex>
+    </VStack>
+  );
+}
+
 // ── Render correct detail for selected item ───────────────────────────────────
 function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProfile, changePassword, deactivateAccount, navigate }) {
   switch (itemId) {
@@ -658,19 +720,7 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
       );
 
     case 'ai-insights':
-      return (
-        <VStack spacing={5} align="stretch">
-          <Box p={4} bg={c.d ? 'rgba(124,58,237,0.08)' : 'purple.50'} borderRadius="xl" border="1px solid" borderColor={c.d ? 'purple.800' : 'purple.200'}>
-            <HStack mb={2}><MdAutoAwesome size={18} color="#7c3aed" /><Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">How AI Insights work</Text></HStack>
-            <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif" lineHeight="1.7">When enabled, our AI reads your diary entry and suggests personalised coping strategies, journalling prompts, and self-care tips. No raw personal data is stored by the AI model after analysis.</Text>
-          </Box>
-          <ToggleListPanel c={c} items={[
-            { key: 'aiEnabled',  label: 'Enable AI insights',          note: 'Analyse my posts and suggest personalised coping strategies',   default: true  },
-            { key: 'aiPrompts',  label: 'Journalling prompts',         note: 'Suggest writing prompts when you start a new diary entry',       default: true  },
-            { key: 'aiMood',     label: 'Mood pattern detection',      note: 'Track mood trends across your entries over time',                default: false },
-          ]} />
-        </VStack>
-      );
+      return <AiSupportPanel c={c} />;
 
     case 'anonymous-default':
       return (
