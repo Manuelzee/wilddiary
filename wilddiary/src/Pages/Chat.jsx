@@ -41,7 +41,7 @@ export default function Chat() {
     }
     let active = true;
     apiRequest('/chat/conversations')
-      .then((data) => { if (active) setConversations(data); })
+      .then((data) => { if (active) setConversations(Array.isArray(data) ? data : []); })
       .catch((error) => toast({ title: 'Could not load chats', description: error.message, status: 'error' }))
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -51,7 +51,7 @@ export default function Chat() {
     if (!activeId) return;
     let active = true;
     apiRequest(`/chat/conversations/${activeId}/messages`)
-      .then((data) => { if (active) setMessages(data.length ? data : [WELCOME]); })
+      .then((data) => { if (active) setMessages(Array.isArray(data) && data.length ? data : [WELCOME]); })
       .catch((error) => toast({ title: 'Could not open chat', description: error.message, status: 'error' }));
     return () => { active = false; };
   }, [activeId, toast]);

@@ -17,7 +17,7 @@ export default function Diary() {
   useEffect(() => {
     if (!isAuthenticated) { navigate('/auth', { replace: true }); return; }
     let active = true;
-    diaryService.list().then((data) => { if (active) setEntries(data); })
+    diaryService.list().then((data) => { if (active) setEntries(Array.isArray(data) ? data : []); })
       .catch((error) => toast({ title: 'Could not load your diary', description: error.message, status: 'error' }))
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };

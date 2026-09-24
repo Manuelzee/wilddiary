@@ -38,8 +38,8 @@ export default function PostDetail() {
       .then(([postData, commentData]) => {
         if (!active) return;
         setPost(postData);
-        setAiInsight(postData.ai_insight || null);
-        setComments(commentData);
+        setAiInsight(postData?.ai_insight || null);
+        setComments(Array.isArray(commentData) ? commentData : []);
       })
       .catch((error) => { if (active) setErrorMsg(error.message || 'Failed to load diary details.'); })
       .finally(() => { if (active) setLoading(false); });
@@ -63,8 +63,9 @@ export default function PostDetail() {
     const res = await addComment(post.id, commentText, isAnonymous);
     if (res.success) {
       setCommentText(''); setIsAnonymous(false); setCommentWarning('');
-      setComments(await getComments(post.id));
-      if (res.data.moderated) {
+      const updatedComments = await getComments(post.id);
+      setComments(Array.isArray(updatedComments) ? updatedComments : []);
+      if (res.data?.moderated) {
         toast({ title: 'Reply submitted', description: 'Your reply has been flagged for safety review.', status: 'warning', duration: 4000, isClosable: true });
       } else {
         toast({ title: 'Reply added', status: 'success', duration: 3000, isClosable: true });

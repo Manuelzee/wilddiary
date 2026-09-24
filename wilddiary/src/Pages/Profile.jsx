@@ -43,7 +43,17 @@ export default function Profile() {
       toast({ title: 'Failed to delete post', description: res.error, status: 'error' });
     }
   };
-  const isCounselor = user.role === 'counselor';
+
+  if (!isAuthenticated) return null;
+  if (!user) {
+    return (
+      <Flex minH="60vh" align="center" justify="center">
+        <Spinner color="brand.500" size="lg" />
+      </Flex>
+    );
+  }
+
+  const isCounselor = user?.role === 'counselor';
 
   const borderColor = isDark ? 'whiteAlpha.100' : 'gray.200';
   const cardBg = isDark ? 'whiteAlpha.50' : 'gray.50';
@@ -64,7 +74,7 @@ export default function Profile() {
                 <MdPerson size={32} />
               </Box>
               <Box>
-                <Heading size="md" fontFamily="'Poppins', sans-serif" textTransform="capitalize">{user.username}</Heading>
+                <Heading size="md" fontFamily="'Poppins', sans-serif" textTransform="capitalize">{user?.username || 'User'}</Heading>
                 <Badge mt={1} colorScheme={isCounselor ? 'green' : 'purple'} borderRadius="full" px={3} py={0.5} fontSize="10px" fontFamily="'Poppins', sans-serif">
                   {isCounselor ? '✓ Verified Counselor' : 'Community Member'}
                 </Badge>
@@ -74,11 +84,11 @@ export default function Profile() {
             <VStack align="flex-start" spacing={3} fontSize="sm" color={isDark ? 'gray.300' : 'gray.600'}>
               <HStack spacing={3}>
                 <MdEmail size={18} color={isDark ? '#555' : '#aaa'} />
-                <Text fontFamily="'Poppins', sans-serif">Email: <Text as="strong" color={isDark ? 'white' : 'black'}>{user.email}</Text></Text>
+                <Text fontFamily="'Poppins', sans-serif">Email: <Text as="strong" color={isDark ? 'white' : 'black'}>{user?.email || 'N/A'}</Text></Text>
               </HStack>
               <HStack spacing={3}>
                 <MdVerifiedUser size={18} color={isDark ? '#555' : '#aaa'} />
-                <Text fontFamily="'Poppins', sans-serif">Role: <Text as="strong" color={isDark ? 'white' : 'black'} textTransform="capitalize">{user.role}</Text></Text>
+                <Text fontFamily="'Poppins', sans-serif">Role: <Text as="strong" color={isDark ? 'white' : 'black'} textTransform="capitalize">{user?.role || 'user'}</Text></Text>
               </HStack>
             </VStack>
           </Box>
