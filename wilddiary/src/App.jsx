@@ -23,6 +23,7 @@ import Insights from './Pages/Insights';
 import Counselors from './Pages/Counselors';
 import Notifications from './Pages/Notifications';
 import Safety from './Pages/Safety';
+import Admin from './Pages/Admin';
 
 // ─── Inner layout (reads location for full-bleed homepage & auth detection) ───
 function AppLayout() {
@@ -40,7 +41,7 @@ function AppLayout() {
   const isFullBleed = (isHomePage && !isAuthenticated) || isAuthPage;
 
   // Pages that manage their own width constraints
-  const isNoConstraint = isHomePage || isFeedPage || location.pathname === '/settings' || location.pathname === '/chat' || location.pathname === '/ai' || isAuthPage;
+  const isNoConstraint = isHomePage || isFeedPage || location.pathname === '/settings' || location.pathname === '/chat' || location.pathname === '/ai' || location.pathname === '/admin' || isAuthPage;
 
   const routesElement = (
     <Routes>
@@ -59,6 +60,7 @@ function AppLayout() {
       <Route path="/counselors" element={<Counselors />} />
       <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       <Route path="/safety" element={<Safety />} />
+      <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -119,6 +121,12 @@ function AppLayout() {
       </Flex>
     </ErrorBoundary>
   );
+}
+
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <Flex flex="1" align="center" justify="center">Checking administrator access…</Flex>;
+  return user?.role === 'admin' ? children : <Navigate to="/feed" replace />;
 }
 
 function ProtectedRoute({ children }) {

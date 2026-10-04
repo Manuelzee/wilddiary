@@ -10,6 +10,7 @@ os.environ["DATABASE_PATH"] = str(Path(TEST_DIR.name) / "test.db")
 os.environ["JWT_SECRET"] = "test-secret-that-is-not-used-outside-tests"
 
 from app import create_app  # noqa: E402
+from db import transaction  # noqa: E402
 
 
 class ApiTestCase(unittest.TestCase):
@@ -37,6 +38,43 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(duplicate.status_code, 409)
         weak = self.register("member_three", "member3@example.com", "short")
         self.assertEqual(weak.status_code, 400)
+
+    def test_admin_user_management_audit_and_explicit_content_clear(self):
+        admin = self.register("site_admin", "admin@example.com")
+        member = self.register("spam_member", "spam@example.com")
+        with transaction() as connection:
+            connection.execute("UPDATE users SET role='admin' WHERE email=?", ("admin@example.com",))
+        admin_headers = self.auth(admin)
+        member_id = member.get_json()["user"]["id"]
+
+        forbidden = self.client.get("/api/admin/users", headers=self.auth(member))
+        self.assertEqual(forbidden.status_code, 403)
+        users = self.client.get("/api/admin/users", headers=admin_headers)
+        self.assertEqual(users.status_code, 200)
+        self.assertTrue(any(row["id"] == member_id for row in users.get_json()))
+
+        flagged = self.client.patch(f"/api/admin/users/{member_id}/flag", headers=admin_headers, json={
+            "flagged": True, "reason": "Repeated promotional spam",
+        })
+        self.assertEqual(flagged.status_code, 200)
+        suspended = self.client.patch(f"/api/admin/users/{member_id}/status", headers=admin_headers, json={"is_active": False})
+        self.assertEqual(suspended.status_code, 200)
+        changed = self.client.post(f"/api/admin/users/{member_id}/password", headers=admin_headers, json={"new_password": "temporary-secure-password"})
+        self.assertEqual(changed.status_code, 200)
+
+        audit = self.client.get("/api/admin/audit-log", headers=admin_headers).get_json()
+        self.assertTrue(any(item["action"] == "user_flagged" for item in audit))
+        self.assertTrue(any(item["action"] == "user_suspended" for item in audit))
+
+        wrong_confirmation = self.client.post("/api/admin/clear-content", headers=admin_headers, json={"confirmation": "clear"})
+        self.assertEqual(wrong_confirmation.status_code, 400)
+        cleared = self.client.post("/api/admin/clear-content", headers=admin_headers, json={"confirmation": "CLEAR WILDDIARY CONTENT"})
+        self.assertEqual(cleared.status_code, 200)
+
+        deleted = self.client.delete(f"/api/admin/users/{member_id}", headers=admin_headers)
+        self.assertEqual(deleted.status_code, 204)
+        self_delete = self.client.delete(f"/api/admin/users/{admin.get_json()['user']['id']}", headers=admin_headers)
+        self.assertEqual(self_delete.status_code, 403)
 
     def test_login_success_invalid_credentials_and_session_validation(self):
         registered = self.register("login_member", "login@example.com")
@@ -137,7 +175,7 @@ class ApiTestCase(unittest.TestCase):
             json={"content": "I feel anxious and overwhelmed."},
         )
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.get_json()["mode"], "local")
+        self.assertEqual(response.get_json()["mode"], "counselor")
         saved = self.client.get(f"/api/chat/conversations/{conversation_id}/messages", headers=self.auth(member))
         self.assertEqual(len(saved.get_json()), 2)
         forbidden = self.client.get(f"/api/chat/conversations/{conversation_id}/messages", headers=self.auth(outsider))

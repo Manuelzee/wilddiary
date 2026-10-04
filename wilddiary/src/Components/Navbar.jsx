@@ -10,7 +10,7 @@ import {
 import {
   MdHome, MdMenuBook, MdInsights, MdAutoAwesome, MdSupportAgent,
   MdPersonAdd, MdNotifications, MdLogout, MdChat,
-  MdSettings,
+  MdSettings, MdAdminPanelSettings,
 } from 'react-icons/md';
 
 const TABS = [
@@ -193,6 +193,16 @@ export default function Navbar() {
                     </HStack>
                   </MenuItem>
                   <MenuDivider borderColor={border} />
+                  {user?.role === 'admin' && (
+                    <MenuItem
+                      as={RouterLink} to="/admin" icon={<MdAdminPanelSettings size={18} />}
+                      fontFamily="'Poppins', sans-serif" fontSize="sm"
+                      _hover={{ bg: isDark ? 'whiteAlpha.100' : 'gray.50' }}
+                    >
+                      Admin dashboard
+                    </MenuItem>
+                  )}
+                  {user?.role === 'admin' && <MenuDivider borderColor={border} />}
                   <MenuItem
                     as={RouterLink} to="/settings"
                     icon={<MdSettings size={18} />}

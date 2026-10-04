@@ -3,7 +3,6 @@ import hashlib
 import hmac
 import os
 import re
-import sqlite3
 from functools import wraps
 
 import jwt
@@ -12,7 +11,7 @@ from flask import Flask, current_app, g, jsonify, request
 from flask_cors import CORS
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from db import fetch_all, fetch_one, init_db, transaction
+from db import CONTENT_TABLES, IntegrityError, fetch_all, fetch_one, init_db, transaction
 from ai_service import generate_reply, generate_post_insight
 
 
@@ -116,6 +115,23 @@ def auth_required(handler):
     return wrapped
 
 
+def admin_required(handler):
+    @auth_required
+    @wraps(handler)
+    def wrapped(user, *args, **kwargs):
+        if user.get("role") != "admin":
+            return api_error("Administrator access required.", 403, "forbidden")
+        return handler(user, *args, **kwargs)
+    return wrapped
+
+
+def audit(connection, admin, action, target_type=None, target_id=None, details=None):
+    connection.execute(
+        "INSERT INTO admin_audit_log(admin_id,admin_name,action,target_type,target_id,details) VALUES(?,?,?,?,?,?)",
+        (admin["id"], admin["username"], action, target_type, target_id, details),
+    )
+
+
 def verify_password(stored, password):
     if stored.startswith(("scrypt:", "pbkdf2:")):
         return check_password_hash(stored, password), False
@@ -204,7 +220,7 @@ def register_routes(app):
                     (username, email, generate_password_hash(password, method="scrypt")),
                 )
                 user = dict(connection.execute("SELECT * FROM users WHERE id=?", (cursor.lastrowid,)).fetchone())
-        except sqlite3.IntegrityError:
+        except IntegrityError:
             return api_error("Username or email is already registered.", 409, "conflict")
         token = issue_token(user)
         return jsonify(token=token, user=public_user(user)), 201
@@ -223,6 +239,8 @@ def register_routes(app):
         if legacy:
             with transaction() as connection:
                 connection.execute("UPDATE users SET password_hash=? WHERE id=?", (generate_password_hash(password, method="scrypt"), user["id"]))
+        with transaction() as connection:
+            connection.execute("UPDATE users SET last_login_at=CURRENT_TIMESTAMP WHERE id=?", (user["id"],))
         return jsonify(token=issue_token(user), user=public_user(user))
 
     @app.get("/api/auth/me")
@@ -242,7 +260,7 @@ def register_routes(app):
             with transaction() as connection:
                 connection.execute("UPDATE users SET username=?,email=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (username, email, user["id"]))
                 updated = dict(connection.execute("SELECT * FROM users WHERE id=?", (user["id"],)).fetchone())
-        except sqlite3.IntegrityError:
+        except IntegrityError:
             return api_error("Username or email is already in use.", 409, "conflict")
         return jsonify(user=public_user(updated))
 
@@ -427,7 +445,7 @@ def register_routes(app):
                 count = connection.execute("SELECT COUNT(*) FROM reports WHERE post_id=?", (post_id,)).fetchone()[0]
                 new_status = "flagged" if count >= 5 else ("under_review" if count >= 3 else "active")
                 connection.execute("UPDATE posts SET status=? WHERE id=?", (new_status, post_id))
-        except sqlite3.IntegrityError:
+        except IntegrityError:
             return api_error("You have already reported this post.", 409, "already_reported")
         return jsonify(message="Report received.", status=new_status)
 
@@ -492,7 +510,7 @@ def register_routes(app):
                 count = connection.execute("SELECT COUNT(*) FROM comment_reports WHERE comment_id=?", (comment_id,)).fetchone()[0]
                 new_status = "flagged" if count >= 5 else ("under_review" if count >= 3 else "active")
                 connection.execute("UPDATE comments SET status=? WHERE id=?", (new_status, comment_id))
-        except sqlite3.IntegrityError:
+        except IntegrityError:
             return api_error("You have already reported this comment.", 409, "already_reported")
         return jsonify(message="Comment report received.", status=new_status)
 
@@ -541,7 +559,8 @@ def register_routes(app):
         conversation = fetch_one("SELECT id,title FROM chat_conversations WHERE id=? AND user_id=?", (conversation_id, user["id"]))
         if not conversation:
             return api_error("Conversation not found.", 404, "not_found")
-        recent_count = fetch_one("SELECT COUNT(*) count FROM chat_messages m JOIN chat_conversations c ON c.id=m.conversation_id WHERE c.user_id=? AND m.role='user' AND m.created_at >= datetime('now','-1 hour')", (user["id"],))["count"]
+        one_hour_ago = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
+        recent_count = fetch_one("SELECT COUNT(*) count FROM chat_messages m JOIN chat_conversations c ON c.id=m.conversation_id WHERE c.user_id=? AND m.role='user' AND m.created_at >= ?", (user["id"], one_hour_ago))["count"]
         if recent_count >= 30:
             return api_error("Chat limit reached. Please try again later.", 429, "rate_limited")
         history = fetch_all("SELECT role,content FROM chat_messages WHERE conversation_id=? ORDER BY id DESC LIMIT 19", (conversation_id,))
@@ -550,8 +569,8 @@ def register_routes(app):
         try:
             reply, mode = generate_reply(history)
         except Exception:
-            app.logger.exception("AI chat provider failed")
-            reply, mode = generate_reply([{"role": "user", "content": content}]) if not os.getenv("OPENAI_API_KEY") else ("I’m having trouble responding right now. Please try again shortly.", "unavailable")
+            app.logger.exception("Counseling engine failed with conversation history")
+            reply, mode = generate_reply([{"role": "user", "content": content}])
         title = content[:57] + ("…" if len(content) > 57 else "")
         with transaction() as connection:
             user_cursor = connection.execute("INSERT INTO chat_messages(conversation_id,role,content) VALUES(?,'user',?)", (conversation_id, content))
@@ -645,10 +664,8 @@ def register_routes(app):
         return jsonify(message="Notifications marked as read.")
 
     @app.get("/api/admin/reports")
-    @auth_required
+    @admin_required
     def admin_reports(user):
-        if user.get("role") != "admin":
-            return api_error("Administrator access required.", 403, "forbidden")
         post_reps = fetch_all("""
             SELECT r.id, 'post' AS target_type, r.post_id AS target_id, r.reporter_id, u.username AS reporter_name,
                    r.reason, r.created_at, p.content AS target_content, p.status AS target_status
@@ -668,10 +685,8 @@ def register_routes(app):
         return jsonify(reports=post_reps + comment_reps)
 
     @app.patch("/api/admin/posts/<int:post_id>/status")
-    @auth_required
+    @admin_required
     def admin_update_post_status(user, post_id):
-        if user.get("role") != "admin":
-            return api_error("Administrator access required.", 403, "forbidden")
         status_val = clean_text((request.get_json(silent=True) or {}).get("status"), 20).lower()
         if status_val not in {"active", "under_review", "flagged"}:
             return api_error("Invalid status value.")
@@ -679,13 +694,12 @@ def register_routes(app):
             if not connection.execute("SELECT 1 FROM posts WHERE id=?", (post_id,)).fetchone():
                 return api_error("Post not found.", 404, "not_found")
             connection.execute("UPDATE posts SET status=? WHERE id=?", (status_val, post_id))
+            audit(connection, user, "post_status_changed", "post", post_id, status_val)
         return jsonify(message="Post status updated.", status=status_val)
 
     @app.post("/api/admin/counselors/<int:target_user_id>/verify")
-    @auth_required
+    @admin_required
     def admin_verify_counselor(user, target_user_id):
-        if user.get("role") != "admin":
-            return api_error("Administrator access required.", 403, "forbidden")
         with transaction() as connection:
             target = connection.execute("SELECT id, role FROM users WHERE id=?", (target_user_id,)).fetchone()
             if not target:
@@ -695,7 +709,118 @@ def register_routes(app):
                 INSERT INTO counselor_profiles(user_id, is_verified) VALUES(?, 1)
                 ON CONFLICT(user_id) DO UPDATE SET is_verified=1
             """, (target_user_id,))
+            audit(connection, user, "counselor_verified", "user", target_user_id)
         return jsonify(message="Counselor verified successfully.", user_id=target_user_id)
+
+    @app.get("/api/admin/overview")
+    @admin_required
+    def admin_overview(_user):
+        return jsonify(
+            users=fetch_one("""SELECT COUNT(*) total,
+                SUM(CASE WHEN is_active=1 THEN 1 ELSE 0 END) active,
+                SUM(CASE WHEN is_flagged=1 THEN 1 ELSE 0 END) flagged
+                FROM users"""),
+            content=fetch_one("""SELECT
+                (SELECT COUNT(*) FROM posts) posts,
+                (SELECT COUNT(*) FROM comments) comments,
+                (SELECT COUNT(*) FROM reports) + (SELECT COUNT(*) FROM comment_reports) reports"""),
+        )
+
+    @app.get("/api/admin/users")
+    @admin_required
+    def admin_users(_user):
+        query = clean_text(request.args.get("q"), 100)
+        params = ()
+        where = ""
+        if query:
+            where = "WHERE username LIKE ? OR email LIKE ?"
+            term = f"%{query}%"
+            params = (term, term)
+        rows = fetch_all(f"""SELECT id,username,email,role,is_active,is_flagged,flag_reason,
+            flagged_at,last_login_at,created_at FROM users {where} ORDER BY is_flagged DESC,id DESC LIMIT 200""", params)
+        return jsonify(rows)
+
+    @app.patch("/api/admin/users/<int:target_user_id>/flag")
+    @admin_required
+    def admin_flag_user(user, target_user_id):
+        data = request.get_json(silent=True) or {}
+        flagged = bool(data.get("flagged", True))
+        reason = clean_text(data.get("reason"), 500)
+        if flagged and len(reason) < 3:
+            return api_error("Give a reason for flagging this account.")
+        with transaction() as connection:
+            target = connection.execute("SELECT id,role FROM users WHERE id=?", (target_user_id,)).fetchone()
+            if not target:
+                return api_error("User not found.", 404, "not_found")
+            if target["role"] == "admin":
+                return api_error("Administrator accounts cannot be flagged here.", 403, "protected_account")
+            connection.execute(
+                "UPDATE users SET is_flagged=?,flag_reason=?,flagged_at=CASE WHEN ?=1 THEN CURRENT_TIMESTAMP ELSE NULL END,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (1 if flagged else 0, reason if flagged else None, 1 if flagged else 0, target_user_id),
+            )
+            audit(connection, user, "user_flagged" if flagged else "user_unflagged", "user", target_user_id, reason or None)
+        return jsonify(message="User flag updated.", is_flagged=flagged)
+
+    @app.patch("/api/admin/users/<int:target_user_id>/status")
+    @admin_required
+    def admin_user_status(user, target_user_id):
+        active = bool((request.get_json(silent=True) or {}).get("is_active"))
+        if target_user_id == user["id"]:
+            return api_error("You cannot suspend your own administrator account.", 403, "protected_account")
+        with transaction() as connection:
+            target = connection.execute("SELECT id,role FROM users WHERE id=?", (target_user_id,)).fetchone()
+            if not target:
+                return api_error("User not found.", 404, "not_found")
+            if target["role"] == "admin":
+                return api_error("Administrator accounts cannot be suspended here.", 403, "protected_account")
+            connection.execute("UPDATE users SET is_active=?,token_version=token_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?", (1 if active else 0, target_user_id))
+            audit(connection, user, "user_activated" if active else "user_suspended", "user", target_user_id)
+        return jsonify(message="User status updated.", is_active=active)
+
+    @app.post("/api/admin/users/<int:target_user_id>/password")
+    @admin_required
+    def admin_reset_password(user, target_user_id):
+        new_password = (request.get_json(silent=True) or {}).get("new_password", "")
+        if not isinstance(new_password, str) or len(new_password) < 8 or len(new_password) > 128:
+            return api_error("New password must be between 8 and 128 characters.")
+        with transaction() as connection:
+            if not connection.execute("SELECT 1 FROM users WHERE id=?", (target_user_id,)).fetchone():
+                return api_error("User not found.", 404, "not_found")
+            connection.execute("UPDATE users SET password_hash=?,token_version=token_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?", (generate_password_hash(new_password, method="scrypt"), target_user_id))
+            audit(connection, user, "password_reset", "user", target_user_id)
+        return jsonify(message="Password changed. Existing sessions were signed out.")
+
+    @app.delete("/api/admin/users/<int:target_user_id>")
+    @admin_required
+    def admin_delete_user(user, target_user_id):
+        if target_user_id == user["id"]:
+            return api_error("You cannot delete your own administrator account.", 403, "protected_account")
+        with transaction() as connection:
+            target = connection.execute("SELECT id,username,role FROM users WHERE id=?", (target_user_id,)).fetchone()
+            if not target:
+                return api_error("User not found.", 404, "not_found")
+            if target["role"] == "admin":
+                return api_error("Administrator accounts cannot be deleted here.", 403, "protected_account")
+            audit(connection, user, "user_deleted", "user", target_user_id, target["username"])
+            connection.execute("DELETE FROM users WHERE id=?", (target_user_id,))
+        return "", 204
+
+    @app.get("/api/admin/audit-log")
+    @admin_required
+    def admin_audit_log(_user):
+        return jsonify(fetch_all("SELECT id,admin_name,action,target_type,target_id,details,created_at FROM admin_audit_log ORDER BY id DESC LIMIT 200"))
+
+    @app.post("/api/admin/clear-content")
+    @admin_required
+    def admin_clear_content(user):
+        confirmation = (request.get_json(silent=True) or {}).get("confirmation", "")
+        if confirmation != "CLEAR WILDDIARY CONTENT":
+            return api_error("Type CLEAR WILDDIARY CONTENT to confirm.", 400, "confirmation_required")
+        with transaction() as connection:
+            for table in CONTENT_TABLES:
+                connection.execute(f"DELETE FROM {table}")
+            audit(connection, user, "all_content_cleared", "database", None)
+        return jsonify(message="Community, chat, diary, and notification content was cleared. User accounts were preserved.")
 
 
 def register_errors(app):
