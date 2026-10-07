@@ -121,6 +121,79 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(disabled.status_code, 403)
         self.assertEqual(disabled.get_json()["code"], "account_disabled")
 
+    def test_forgot_password_and_reset_flow_with_otp(self):
+        registered = self.register("otp_user", "otp-user@example.com")
+        self.assertEqual(registered.status_code, 201)
+
+        # 1. Unknown email returns safe generic message
+        unknown = self.client.post("/api/auth/forgot-password", json={"email": "nobody@example.com"})
+        self.assertEqual(unknown.status_code, 200)
+        self.assertIn("verification code has been sent", unknown.get_json()["message"])
+        self.assertNotIn("dev_otp", unknown.get_json())
+
+        # 2. Existing user receives 6-digit OTP
+        forgot = self.client.post("/api/auth/forgot-password", json={"email": "otp-user@example.com"})
+        self.assertEqual(forgot.status_code, 200)
+        otp = forgot.get_json().get("dev_otp")
+        self.assertTrue(otp and len(otp) == 6)
+
+        # 3. Wrong OTP is rejected
+        wrong = self.client.post("/api/auth/reset-password", json={
+            "email": "otp-user@example.com",
+            "otp": "000000" if otp != "000000" else "111111",
+            "new_password": "brand-new-secure-password",
+        })
+        self.assertEqual(wrong.status_code, 400)
+        self.assertEqual(wrong.get_json()["code"], "incorrect_code")
+
+        # 4. Correct OTP successfully resets password
+        reset = self.client.post("/api/auth/reset-password", json={
+            "email": "otp-user@example.com",
+            "otp": otp,
+            "new_password": "brand-new-secure-password",
+        })
+        self.assertEqual(reset.status_code, 200)
+        self.assertIn("successfully reset", reset.get_json()["message"])
+
+        # 5. Old password no longer works
+        old_login = self.client.post("/api/auth/login", json={
+            "email": "otp-user@example.com", "password": "correct-horse-battery",
+        })
+        self.assertEqual(old_login.status_code, 401)
+
+        # 6. New password logs in successfully
+        new_login = self.client.post("/api/auth/login", json={
+            "email": "otp-user@example.com", "password": "brand-new-secure-password",
+        })
+        self.assertEqual(new_login.status_code, 200)
+        self.assertEqual(new_login.get_json()["user"]["username"], "otp_user")
+
+        # 7. Used OTP cannot be reused
+        reused = self.client.post("/api/auth/reset-password", json={
+            "email": "otp-user@example.com",
+            "otp": otp,
+            "new_password": "another-password-1234",
+        })
+        self.assertEqual(reused.status_code, 400)
+
+    def test_reset_password_rejects_expired_code(self):
+        self.register("expired_user", "expired@example.com")
+        forgot = self.client.post("/api/auth/forgot-password", json={"email": "expired@example.com"})
+        otp = forgot.get_json()["dev_otp"]
+
+        # Manually expire the OTP in the database
+        past_time = "2020-01-01 00:00:00"
+        with transaction() as connection:
+            connection.execute("UPDATE password_resets SET expires_at=? WHERE lower(email)=?", (past_time, "expired@example.com"))
+
+        reset = self.client.post("/api/auth/reset-password", json={
+            "email": "expired@example.com",
+            "otp": otp,
+            "new_password": "brand-new-password-123",
+        })
+        self.assertEqual(reset.status_code, 400)
+        self.assertEqual(reset.get_json()["code"], "expired_code")
+
     def test_token_is_valid_across_app_instances_with_shared_secret(self):
         second_app = create_app({"TESTING": True, "JWT_SECRET": "test-secret"})
         registered = self.register("worker_member", "worker@example.com")
@@ -135,7 +208,14 @@ class ApiTestCase(unittest.TestCase):
             with patch.dict(os.environ, {"JWT_SECRET": "too-short"}, clear=False):
                 with self.assertRaisesRegex(RuntimeError, "at least 32 characters"):
                     create_app()
-
+    def test_production_database_requirement_and_bypass(self):
+        from db import require_persistent_database
+        with patch.dict(os.environ, {"APP_ENV": "production", "DATABASE_URL": ""}, clear=False):
+            with self.assertRaisesRegex(RuntimeError, "DATABASE_URL must be set to a persistent PostgreSQL"):
+                require_persistent_database()
+            with patch.dict(os.environ, {"ALLOW_EPHEMERAL_SQLITE": "true"}, clear=False):
+                # Should not raise
+                require_persistent_database()
     def test_full_post_comment_reaction_flow_and_anonymity(self):
         owner = self.register("post_owner", "owner@example.com")
         viewer = self.register("post_viewer", "viewer@example.com")

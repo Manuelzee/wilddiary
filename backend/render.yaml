@@ -16,3 +16,8 @@ services:
         value: https://wilddiary.pages.dev,https://wilddiary-social.netlify.app,https://wilddiary.netlify.app
       - key: JWT_SECRET
         generateValue: true
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        value: Wild Diary <onboarding@resend.dev>
+

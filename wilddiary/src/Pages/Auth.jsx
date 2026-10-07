@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../Context/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box, Flex, VStack, HStack, Heading, Text, Button, Input,
   FormControl, FormLabel, InputGroup,
   InputRightElement, IconButton, Link, Select,
   Image, useToast, Divider,
 } from '@chakra-ui/react';
-import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import { MdVisibility, MdVisibilityOff, MdArrowBack, MdLockReset, MdLock } from 'react-icons/md';
 
 // ─── Helper: generate year/month/day options ──────────────────────────────────
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -24,21 +24,40 @@ const makeUsername = (firstName, surname) => `${firstName}_${surname}`
   .slice(0, 30);
 
 export default function Auth() {
-  const { login, register, isAuthenticated } = useAuth();
+  const { login, register, forgotPassword, resetPassword, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [isRegister, setIsRegister] = useState(false);
+  const [mode, setMode] = useState('login'); // 'login' | 'register' | 'forgot' | 'reset'
+  const isRegister = mode === 'register';
+
   const [showPw, setShowPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+
   const [formData, setFormData] = useState({
     firstName: '', surname: '', email: '', password: '',
     dobDay: '', dobMonth: '', dobYear: '', gender: '',
   });
+
+  const [resetEmail, setResetEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) navigate('/feed', { replace: true });
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   if (isAuthenticated) return null;
 
@@ -64,9 +83,118 @@ export default function Auth() {
     setLoading(false);
   };
 
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    const emailToReset = resetEmail.trim();
+    if (!emailToReset) {
+      toast({ title: 'Enter your email address.', status: 'warning', duration: 3000, isClosable: true });
+      return;
+    }
+    setLoading(true);
+    const res = await forgotPassword(emailToReset);
+    setLoading(false);
+    if (res.success) {
+      toast({
+        title: 'Verification code sent!',
+        description: `Please check ${emailToReset} for your 6-digit OTP code.`,
+        status: 'info',
+        duration: 5000,
+        isClosable: true,
+      });
+      if (res.dev_otp) {
+        setOtpCode(res.dev_otp);
+      }
+      setResendCooldown(60);
+      setMode('reset');
+    } else {
+      toast({
+        title: res.error || 'Could not send verification code.',
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0 || !resetEmail.trim()) return;
+    setLoading(true);
+    const res = await forgotPassword(resetEmail.trim());
+    setLoading(false);
+    if (res.success) {
+      toast({
+        title: 'New verification code sent!',
+        description: 'Please check your email.',
+        status: 'info',
+        duration: 4000,
+        isClosable: true,
+      });
+      if (res.dev_otp) {
+        setOtpCode(res.dev_otp);
+      }
+      setResendCooldown(60);
+    } else {
+      toast({
+        title: res.error || 'Could not resend code.',
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleResetSubmit = async (e) => {
+    e.preventDefault();
+    const cleanOtp = otpCode.trim();
+    if (!cleanOtp || cleanOtp.length < 4) {
+      toast({ title: 'Enter the 6-digit verification code.', status: 'warning', duration: 3000, isClosable: true });
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast({ title: 'New password must be at least 8 characters.', status: 'warning', duration: 3000, isClosable: true });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: 'Passwords do not match.', status: 'warning', duration: 3000, isClosable: true });
+      return;
+    }
+    setLoading(true);
+    const res = await resetPassword(resetEmail.trim(), cleanOtp, newPassword);
+    setLoading(false);
+    if (res.success) {
+      toast({
+        title: 'Password updated!',
+        description: 'You can now sign in with your new password.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      setFormData(prev => ({ ...prev, email: resetEmail.trim(), password: '' }));
+      setOtpCode('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setMode('login');
+    } else {
+      toast({
+        title: res.error || 'Failed to reset password.',
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
+
   const switchMode = (toReg) => {
-    setIsRegister(toReg);
+    setMode(toReg ? 'register' : 'login');
     setFormData({ firstName: '', surname: '', email: '', password: '', dobDay: '', dobMonth: '', dobYear: '', gender: '' });
+  };
+
+  const openForgotPassword = () => {
+    setResetEmail(formData.email || '');
+    setOtpCode('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setMode('forgot');
   };
 
   const subtleText = 'gray.500';
@@ -80,6 +208,35 @@ export default function Auth() {
       position="relative"
       w="100%"
     >
+      {/* ── Mobile-only top-left logo ── */}
+      <Box
+        display={{ base: 'flex', md: 'none' }}
+        position="absolute"
+        top={{ base: 4, sm: 5 }}
+        left={{ base: 4, sm: 5 }}
+        zIndex={20}
+      >
+        <HStack as={RouterLink} to="/" spacing={2.5} _hover={{ textDecoration: 'none' }}>
+          <Image
+            src="/diarylogo.svg"
+            fallbackSrc="/app-logo.jpg"
+            alt="Wild Diary"
+            boxSize="36px"
+            borderRadius="full"
+            objectFit="cover"
+          />
+          <Text
+            fontWeight="800"
+            fontSize="md"
+            letterSpacing="-0.3px"
+            fontFamily="'Poppins', sans-serif"
+            color="black"
+          >
+            Wild Diary
+          </Text>
+        </HStack>
+      </Box>
+
       {/* ════════════════════════════════════════════════════════════════════════
           LEFT PANEL — Logo + Tagline beside Hero image (hidden on mobile)
           ════════════════════════════════════════════════════════════════════════ */}
@@ -95,18 +252,35 @@ export default function Auth() {
         overflow="hidden"
       >
         <Box w="100%" maxW="760px" h={{ md: '600px', lg: '680px' }} position="relative" zIndex={1}>
-          {/* Logo */}
-          <Image
-            src="/app-logo.jpg"
-            alt="Wild Diary Logo"
-            boxSize="48px"
-            borderRadius="full"
-            objectFit="cover"
+          {/* Logo with text */}
+          <HStack
+            as={RouterLink}
+            to="/"
+            spacing={2.5}
             position="absolute"
             top={0}
             left={0}
             zIndex={2}
-          />
+            _hover={{ textDecoration: 'none' }}
+          >
+            <Image
+              src="/diarylogo.svg"
+              fallbackSrc="/app-logo.jpg"
+              alt="Wild Diary"
+              boxSize="42px"
+              borderRadius="full"
+              objectFit="cover"
+            />
+            <Text
+              fontWeight="800"
+              fontSize="lg"
+              letterSpacing="-0.3px"
+              fontFamily="'Poppins', sans-serif"
+              color="black"
+            >
+              Wild Diary
+            </Text>
+          </HStack>
 
           {/* Large artwork anchored to the upper-right, as in the reference composition */}
           <Image
@@ -154,238 +328,557 @@ export default function Auth() {
         justify="center"
         align="center"
         px={{ base: 6, md: 10 }}
-        py={12}
+        pt={{ base: 16, md: 12 }}
+        pb={{ base: 10, md: 12 }}
         borderLeft={{ md: '1px solid' }}
         borderColor={{ md: 'gray.100' }}
         minH="100dvh"
         overflowY="auto"
         bg="white"
       >
-        {/* Mobile-only logo */}
-        <Box display={{ base: 'block', md: 'none' }} mb={6}>
-          <Image src="/app-logo.jpg" alt="Logo" boxSize="48px" borderRadius="full" objectFit="cover" mx="auto" />
-        </Box>
 
         <Box w="100%" maxW="500px">
-          {/* Header */}
-          <Heading
-            as="h6"
-            fontSize="md"
-            fontWeight="700"
-            fontFamily="'Poppins', sans-serif"
-            lineHeight="1.3"
-            textAlign={{ base: 'center', md: 'left' }}
-            color="black"
-            mb={5}
-          >
-            {isRegister ? 'Create an account' : 'Sign in to your diary'}
-          </Heading>
-
-          {/* Form */}
-          <Box
-            as="form"
-            onSubmit={handleSubmit}
-            bg="white"
-            p={{ base: 5, md: 8 }}
-            borderRadius="xl"
-            border="1px solid"
-            borderColor="gray.200"
-            boxShadow="0 2px 12px rgba(0,0,0,0.06)"
-          >
-            <VStack spacing={4} align="stretch">
-              {/* Registration fields */}
-              {isRegister && (
-                <>
-                  {/* Name */}
-                  <FormControl>
-                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color="gray.700">Name</FormLabel>
-                    <HStack>
-                      <Input name="firstName" placeholder="First name" value={formData.firstName}
-                        onChange={handleChange} required size="lg" fontFamily="'Poppins', sans-serif"
-                        bg="gray.50" borderColor="gray.300" borderRadius="lg" color="black"
-                        _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px #7c3aed', bg: 'white' }}
-                        _hover={{ borderColor: 'gray.400' }} />
-                      <Input name="surname" placeholder="Surname" value={formData.surname}
-                        onChange={handleChange} required size="lg" fontFamily="'Poppins', sans-serif"
-                        bg="gray.50" borderColor="gray.300" borderRadius="lg" color="black"
-                        _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px #7c3aed', bg: 'white' }}
-                        _hover={{ borderColor: 'gray.400' }} />
-                    </HStack>
-                  </FormControl>
-
-                  {/* Date of birth */}
-                  <FormControl>
-                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color="gray.700">Date of birth</FormLabel>
-                    <HStack>
-                      <Select name="dobDay" placeholder="Day" value={formData.dobDay}
-                        onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
-                        borderColor={borderColor} sx={selectSx}>
-                        {days.map(d => <option key={d} value={d}>{d}</option>)}
-                      </Select>
-                      <Select name="dobMonth" placeholder="Month" value={formData.dobMonth}
-                        onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
-                        borderColor={borderColor} sx={selectSx}>
-                        {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-                      </Select>
-                      <Select name="dobYear" placeholder="Year" value={formData.dobYear}
-                        onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
-                        borderColor={borderColor} sx={selectSx}>
-                        {years.map(y => <option key={y} value={y}>{y}</option>)}
-                      </Select>
-                    </HStack>
-                  </FormControl>
-
-                  {/* Gender */}
-                  <FormControl>
-                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color="gray.700">Gender</FormLabel>
-                    <Select name="gender" placeholder="Select your gender" value={formData.gender}
-                      onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
-                      borderColor={borderColor} sx={selectSx}>
-                      <option value="female">Female</option>
-                      <option value="male">Male</option>
-                      <option value="other">Other</option>
-                      <option value="prefer_not">Prefer not to say</option>
-                    </Select>
-                  </FormControl>
-                </>
-              )}
-
-              {/* Email */}
-              <FormControl>
-                <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
-                  {isRegister ? 'Mobile number or email address' : 'Email address'}
-                </FormLabel>
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder={isRegister ? 'Mobile number or email address' : 'Email address or phone number'}
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  size="lg"
-                  fontFamily="'Poppins', sans-serif"
-                  bg="gray.50"
-                  border="1px solid"
-                  borderColor="gray.300"
-                  borderRadius="lg"
-                  _focus={{
-                    borderColor: 'brand.500',
-                    boxShadow: '0 0 0 1px #7c3aed',
-                    bg: 'white',
-                  }}
-                  _hover={{ borderColor: 'gray.400' }}
-                  color="black"
+          {/* ══════════ 1. FORGOT PASSWORD MODE ══════════ */}
+          {mode === 'forgot' && (
+            <>
+              <HStack spacing={2} mb={1}>
+                <IconButton
+                  aria-label="Back to sign in"
+                  icon={<MdArrowBack size={20} />}
+                  size="sm"
+                  variant="ghost"
+                  borderRadius="full"
+                  onClick={() => setMode('login')}
                 />
-              </FormControl>
-
-              {/* Password */}
-              <FormControl>
-                <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
-                  Password
-                </FormLabel>
-                <InputGroup>
-                  <Input
-                    name="password"
-                    type={showPw ? 'text' : 'password'}
-                    placeholder="Password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    size="lg"
-                    pr="48px"
-                    fontFamily="'Poppins', sans-serif"
-                    bg="gray.50"
-                    border="1px solid"
-                    borderColor="gray.300"
-                    borderRadius="lg"
-                    _focus={{
-                      borderColor: 'brand.500',
-                      boxShadow: '0 0 0 1px #7c3aed',
-                      bg: 'white',
-                    }}
-                    _hover={{ borderColor: 'gray.400' }}
-                    color="black"
-                  />
-                  <InputRightElement h="full">
-                    <IconButton aria-label={showPw ? 'Hide' : 'Show'} icon={showPw ? <MdVisibilityOff size={18} /> : <MdVisibility size={18} />}
-                      size="sm" variant="ghost" borderRadius="full" onClick={() => setShowPw(v => !v)} />
-                  </InputRightElement>
-                </InputGroup>
-              </FormControl>
-
-              {/* Submit */}
-              <Button
-                type="submit"
-                size="lg"
-                isLoading={loading}
-                loadingText="Please wait…"
-                w="100%"
-                fontFamily="'Poppins', sans-serif"
-                fontWeight="700"
-                fontSize="md"
-                borderRadius="lg"
-                bg="brand.500"
-                color="white"
-                _hover={{ bg: 'brand.600', transform: 'translateY(-1px)', boxShadow: '0 4px 14px rgba(124,58,237,0.4)' }}
-                _active={{ bg: 'brand.700', transform: 'translateY(0)' }}
-                transition="all 0.2s ease"
-                mt={2}
-              >
-                {isRegister ? 'Sign Up' : 'Log In'}
-              </Button>
-
-              {/* Forgot password (login only) */}
-              {!isRegister && (
-                <Link
-                  href="#"
-                  fontSize="sm"
-                  color="brand.500"
-                  fontWeight="600"
+                <Heading
+                  as="h6"
+                  fontSize="md"
+                  fontWeight="700"
                   fontFamily="'Poppins', sans-serif"
-                  textAlign="center"
-                  _hover={{ textDecoration: 'underline' }}
-                  display="block"
+                  lineHeight="1.3"
+                  color="black"
                 >
-                  Forgotten password?
-                </Link>
-              )}
+                  Find your diary account
+                </Heading>
+              </HStack>
+              <Text fontSize="xs" color="gray.500" mb={5} pl={8}>
+                Enter the email address registered with Wild Diary to receive a one-time verification code via Resend.
+              </Text>
 
-              {/* Divider */}
-              <Flex align="center" my={1}>
-                <Divider borderColor="gray.200" />
-              </Flex>
-
-              {/* Switch mode button */}
-              <Button
-                onClick={() => switchMode(!isRegister)}
-                size="lg"
-                w="100%"
-                fontFamily="'Poppins', sans-serif"
-                fontWeight="700"
-                fontSize="md"
-                borderRadius="lg"
-                variant="outline"
-                borderColor="brand.500"
-                color="brand.500"
-                _hover={{
-                  bg: 'brand.50',
-                  transform: 'translateY(-1px)',
-                }}
-                _active={{ transform: 'translateY(0)' }}
-                transition="all 0.2s ease"
+              <Box
+                as="form"
+                onSubmit={handleForgotSubmit}
+                bg="white"
+                p={{ base: 5, md: 8 }}
+                borderRadius="xl"
+                border="1px solid"
+                borderColor="gray.200"
+                boxShadow="0 2px 12px rgba(0,0,0,0.06)"
               >
-                {isRegister ? 'Already have an account? Log in' : 'Create new account'}
-              </Button>
-            </VStack>
-          </Box>
+                <VStack spacing={4} align="stretch">
+                  <FormControl isRequired>
+                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
+                      Email address
+                    </FormLabel>
+                    <Input
+                      type="email"
+                      placeholder="Enter your registered email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      required
+                      size="lg"
+                      fontFamily="'Poppins', sans-serif"
+                      bg="gray.50"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="lg"
+                      _focus={{
+                        borderColor: 'brand.500',
+                        boxShadow: '0 0 0 1px #7c3aed',
+                        bg: 'white',
+                      }}
+                      _hover={{ borderColor: 'gray.400' }}
+                      color="black"
+                    />
+                  </FormControl>
 
-          {isRegister && (
-            <Text fontSize="xs" color={subtleText} mt={6} lineHeight="1.6" fontFamily="'Poppins', sans-serif" textAlign="center">
-              By tapping Sign Up, you agree to our{' '}
-              <Link href="#" color={subtleText} textDecoration="underline">Terms</Link>,{' '}
-              <Link href="#" color={subtleText} textDecoration="underline">Privacy Policy</Link> and{' '}
-              <Link href="#" color={subtleText} textDecoration="underline">Community Rules</Link>.
-            </Text>
+                  <Button
+                    type="submit"
+                    size="lg"
+                    isLoading={loading}
+                    loadingText="Sending OTP…"
+                    w="100%"
+                    fontFamily="'Poppins', sans-serif"
+                    fontWeight="700"
+                    fontSize="md"
+                    borderRadius="lg"
+                    bg="brand.500"
+                    color="white"
+                    _hover={{ bg: 'brand.600', transform: 'translateY(-1px)', boxShadow: '0 4px 14px rgba(124,58,237,0.4)' }}
+                    _active={{ bg: 'brand.700', transform: 'translateY(0)' }}
+                    transition="all 0.2s ease"
+                    mt={2}
+                  >
+                    Send Verification Code
+                  </Button>
+
+                  <Flex align="center" my={1}>
+                    <Divider borderColor="gray.200" />
+                  </Flex>
+
+                  <Button
+                    onClick={() => setMode('login')}
+                    size="lg"
+                    w="100%"
+                    fontFamily="'Poppins', sans-serif"
+                    fontWeight="700"
+                    fontSize="md"
+                    borderRadius="lg"
+                    variant="outline"
+                    borderColor="gray.300"
+                    color="gray.700"
+                    _hover={{ bg: 'gray.50' }}
+                  >
+                    Back to Sign In
+                  </Button>
+                </VStack>
+              </Box>
+            </>
+          )}
+
+          {/* ══════════ 2. RESET PASSWORD (ENTER OTP) MODE ══════════ */}
+          {mode === 'reset' && (
+            <>
+              <HStack spacing={2} mb={1}>
+                <IconButton
+                  aria-label="Back to email entry"
+                  icon={<MdArrowBack size={20} />}
+                  size="sm"
+                  variant="ghost"
+                  borderRadius="full"
+                  onClick={() => setMode('forgot')}
+                />
+                <Heading
+                  as="h6"
+                  fontSize="md"
+                  fontWeight="700"
+                  fontFamily="'Poppins', sans-serif"
+                  lineHeight="1.3"
+                  color="black"
+                >
+                  Set new password
+                </Heading>
+              </HStack>
+              <Text fontSize="xs" color="gray.500" mb={5} pl={8}>
+                We sent a 6-digit code to <strong>{resetEmail}</strong>. Enter it below with your new password.
+              </Text>
+
+              <Box
+                as="form"
+                onSubmit={handleResetSubmit}
+                bg="white"
+                p={{ base: 5, md: 8 }}
+                borderRadius="xl"
+                border="1px solid"
+                borderColor="gray.200"
+                boxShadow="0 2px 12px rgba(0,0,0,0.06)"
+              >
+                <VStack spacing={4} align="stretch">
+                  <FormControl isRequired>
+                    <Flex justify="space-between" align="center" mb={1}>
+                      <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color="gray.700" mb={0}>
+                        6-Digit Verification Code
+                      </FormLabel>
+                      {resendCooldown > 0 ? (
+                        <Text fontSize="xs" color="gray.500" fontFamily="'Poppins', sans-serif">
+                          Resend in {resendCooldown}s
+                        </Text>
+                      ) : (
+                        <Button
+                          variant="link"
+                          size="xs"
+                          colorScheme="purple"
+                          color="brand.500"
+                          fontWeight="700"
+                          onClick={handleResendOtp}
+                          isDisabled={loading}
+                        >
+                          Resend code
+                        </Button>
+                      )}
+                    </Flex>
+                    <Input
+                      type="text"
+                      placeholder="123456"
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                      required
+                      size="lg"
+                      fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
+                      fontWeight="800"
+                      fontSize="xl"
+                      letterSpacing="6px"
+                      textAlign="center"
+                      bg="purple.50"
+                      border="1.5px dashed"
+                      borderColor="brand.400"
+                      borderRadius="lg"
+                      _focus={{
+                        borderColor: 'brand.500',
+                        boxShadow: '0 0 0 1px #7c3aed',
+                        bg: 'white',
+                      }}
+                      color="brand.700"
+                    />
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
+                      New Password
+                    </FormLabel>
+                    <InputGroup>
+                      <Input
+                        type={showNewPw ? 'text' : 'password'}
+                        placeholder="At least 8 characters"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                        size="lg"
+                        pr="48px"
+                        fontFamily="'Poppins', sans-serif"
+                        bg="gray.50"
+                        border="1px solid"
+                        borderColor="gray.300"
+                        borderRadius="lg"
+                        _focus={{
+                          borderColor: 'brand.500',
+                          boxShadow: '0 0 0 1px #7c3aed',
+                          bg: 'white',
+                        }}
+                        color="black"
+                      />
+                      <InputRightElement h="full">
+                        <IconButton
+                          aria-label={showNewPw ? 'Hide' : 'Show'}
+                          icon={showNewPw ? <MdVisibilityOff size={18} /> : <MdVisibility size={18} />}
+                          size="sm"
+                          variant="ghost"
+                          borderRadius="full"
+                          onClick={() => setShowNewPw(v => !v)}
+                        />
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
+                      Confirm New Password
+                    </FormLabel>
+                    <InputGroup>
+                      <Input
+                        type={showConfirmPw ? 'text' : 'password'}
+                        placeholder="Re-enter your new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        size="lg"
+                        pr="48px"
+                        fontFamily="'Poppins', sans-serif"
+                        bg="gray.50"
+                        border="1px solid"
+                        borderColor="gray.300"
+                        borderRadius="lg"
+                        _focus={{
+                          borderColor: 'brand.500',
+                          boxShadow: '0 0 0 1px #7c3aed',
+                          bg: 'white',
+                        }}
+                        color="black"
+                      />
+                      <InputRightElement h="full">
+                        <IconButton
+                          aria-label={showConfirmPw ? 'Hide' : 'Show'}
+                          icon={showConfirmPw ? <MdVisibilityOff size={18} /> : <MdVisibility size={18} />}
+                          size="sm"
+                          variant="ghost"
+                          borderRadius="full"
+                          onClick={() => setShowConfirmPw(v => !v)}
+                        />
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    isLoading={loading}
+                    loadingText="Updating password…"
+                    w="100%"
+                    fontFamily="'Poppins', sans-serif"
+                    fontWeight="700"
+                    fontSize="md"
+                    borderRadius="lg"
+                    bg="brand.500"
+                    color="white"
+                    _hover={{ bg: 'brand.600', transform: 'translateY(-1px)', boxShadow: '0 4px 14px rgba(124,58,237,0.4)' }}
+                    _active={{ bg: 'brand.700', transform: 'translateY(0)' }}
+                    transition="all 0.2s ease"
+                    mt={2}
+                  >
+                    Reset Password
+                  </Button>
+
+                  <Flex align="center" my={1}>
+                    <Divider borderColor="gray.200" />
+                  </Flex>
+
+                  <Button
+                    onClick={() => setMode('login')}
+                    size="lg"
+                    w="100%"
+                    fontFamily="'Poppins', sans-serif"
+                    fontWeight="700"
+                    fontSize="md"
+                    borderRadius="lg"
+                    variant="outline"
+                    borderColor="gray.300"
+                    color="gray.700"
+                    _hover={{ bg: 'gray.50' }}
+                  >
+                    Cancel & Return to Sign In
+                  </Button>
+                </VStack>
+              </Box>
+            </>
+          )}
+
+          {/* ══════════ 3. LOGIN & REGISTER MODES ══════════ */}
+          {(mode === 'login' || mode === 'register') && (
+            <>
+              {/* Header */}
+              <Heading
+                as="h6"
+                fontSize="md"
+                fontWeight="700"
+                fontFamily="'Poppins', sans-serif"
+                lineHeight="1.3"
+                textAlign={{ base: 'center', md: 'left' }}
+                color="black"
+                mb={5}
+              >
+                {isRegister ? 'Create an account' : 'Sign in to your diary'}
+              </Heading>
+
+              {/* Form */}
+              <Box
+                as="form"
+                onSubmit={handleSubmit}
+                bg="white"
+                p={{ base: 5, md: 8 }}
+                borderRadius="xl"
+                border="1px solid"
+                borderColor="gray.200"
+                boxShadow="0 2px 12px rgba(0,0,0,0.06)"
+              >
+                <VStack spacing={4} align="stretch">
+                  {/* Registration fields */}
+                  {isRegister && (
+                    <>
+                      {/* Name */}
+                      <FormControl>
+                        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color="gray.700">Name</FormLabel>
+                        <HStack>
+                          <Input name="firstName" placeholder="First name" value={formData.firstName}
+                            onChange={handleChange} required size="lg" fontFamily="'Poppins', sans-serif"
+                            bg="gray.50" borderColor="gray.300" borderRadius="lg" color="black"
+                            _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px #7c3aed', bg: 'white' }}
+                            _hover={{ borderColor: 'gray.400' }} />
+                          <Input name="surname" placeholder="Surname" value={formData.surname}
+                            onChange={handleChange} required size="lg" fontFamily="'Poppins', sans-serif"
+                            bg="gray.50" borderColor="gray.300" borderRadius="lg" color="black"
+                            _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px #7c3aed', bg: 'white' }}
+                            _hover={{ borderColor: 'gray.400' }} />
+                        </HStack>
+                      </FormControl>
+
+                      {/* Date of birth */}
+                      <FormControl>
+                        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color="gray.700">Date of birth</FormLabel>
+                        <HStack>
+                          <Select name="dobDay" placeholder="Day" value={formData.dobDay}
+                            onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                            borderColor={borderColor} sx={selectSx}>
+                            {days.map(d => <option key={d} value={d}>{d}</option>)}
+                          </Select>
+                          <Select name="dobMonth" placeholder="Month" value={formData.dobMonth}
+                            onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                            borderColor={borderColor} sx={selectSx}>
+                            {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+                          </Select>
+                          <Select name="dobYear" placeholder="Year" value={formData.dobYear}
+                            onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                            borderColor={borderColor} sx={selectSx}>
+                            {years.map(y => <option key={y} value={y}>{y}</option>)}
+                          </Select>
+                        </HStack>
+                      </FormControl>
+
+                      {/* Gender */}
+                      <FormControl>
+                        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color="gray.700">Gender</FormLabel>
+                        <Select name="gender" placeholder="Select your gender" value={formData.gender}
+                          onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                          borderColor={borderColor} sx={selectSx}>
+                          <option value="female">Female</option>
+                          <option value="male">Male</option>
+                          <option value="other">Other</option>
+                          <option value="prefer_not">Prefer not to say</option>
+                        </Select>
+                      </FormControl>
+                    </>
+                  )}
+
+                  {/* Email */}
+                  <FormControl>
+                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
+                      {isRegister ? 'Mobile number or email address' : 'Email address'}
+                    </FormLabel>
+                    <Input
+                      name="email"
+                      type="email"
+                      placeholder={isRegister ? 'Mobile number or email address' : 'Email address or phone number'}
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      size="lg"
+                      fontFamily="'Poppins', sans-serif"
+                      bg="gray.50"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="lg"
+                      _focus={{
+                        borderColor: 'brand.500',
+                        boxShadow: '0 0 0 1px #7c3aed',
+                        bg: 'white',
+                      }}
+                      _hover={{ borderColor: 'gray.400' }}
+                      color="black"
+                    />
+                  </FormControl>
+
+                  {/* Password */}
+                  <FormControl>
+                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
+                      Password
+                    </FormLabel>
+                    <InputGroup>
+                      <Input
+                        name="password"
+                        type={showPw ? 'text' : 'password'}
+                        placeholder="Password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        size="lg"
+                        pr="48px"
+                        fontFamily="'Poppins', sans-serif"
+                        bg="gray.50"
+                        border="1px solid"
+                        borderColor="gray.300"
+                        borderRadius="lg"
+                        _focus={{
+                          borderColor: 'brand.500',
+                          boxShadow: '0 0 0 1px #7c3aed',
+                          bg: 'white',
+                        }}
+                        _hover={{ borderColor: 'gray.400' }}
+                        color="black"
+                      />
+                      <InputRightElement h="full">
+                        <IconButton aria-label={showPw ? 'Hide' : 'Show'} icon={showPw ? <MdVisibilityOff size={18} /> : <MdVisibility size={18} />}
+                          size="sm" variant="ghost" borderRadius="full" onClick={() => setShowPw(v => !v)} />
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+
+                  {/* Submit */}
+                  <Button
+                    type="submit"
+                    size="lg"
+                    isLoading={loading}
+                    loadingText="Please wait…"
+                    w="100%"
+                    fontFamily="'Poppins', sans-serif"
+                    fontWeight="700"
+                    fontSize="md"
+                    borderRadius="lg"
+                    bg="brand.500"
+                    color="white"
+                    _hover={{ bg: 'brand.600', transform: 'translateY(-1px)', boxShadow: '0 4px 14px rgba(124,58,237,0.4)' }}
+                    _active={{ bg: 'brand.700', transform: 'translateY(0)' }}
+                    transition="all 0.2s ease"
+                    mt={2}
+                  >
+                    {isRegister ? 'Sign Up' : 'Log In'}
+                  </Button>
+
+                  {/* Forgot password (login only) */}
+                  {!isRegister && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      color="brand.500"
+                      fontWeight="600"
+                      fontFamily="'Poppins', sans-serif"
+                      textAlign="center"
+                      onClick={openForgotPassword}
+                      _hover={{ textDecoration: 'underline' }}
+                      display="block"
+                      mx="auto"
+                    >
+                      Forgotten password?
+                    </Button>
+                  )}
+
+                  {/* Divider */}
+                  <Flex align="center" my={1}>
+                    <Divider borderColor="gray.200" />
+                  </Flex>
+
+                  {/* Switch mode button */}
+                  <Button
+                    onClick={() => switchMode(!isRegister)}
+                    size="lg"
+                    w="100%"
+                    fontFamily="'Poppins', sans-serif"
+                    fontWeight="700"
+                    fontSize="md"
+                    borderRadius="lg"
+                    variant="outline"
+                    borderColor="brand.500"
+                    color="brand.500"
+                    _hover={{
+                      bg: 'brand.50',
+                      transform: 'translateY(-1px)',
+                    }}
+                    _active={{ transform: 'translateY(0)' }}
+                    transition="all 0.2s ease"
+                  >
+                    {isRegister ? 'Already have an account? Log in' : 'Create new account'}
+                  </Button>
+                </VStack>
+              </Box>
+
+              {isRegister && (
+                <Text fontSize="xs" color={subtleText} mt={6} lineHeight="1.6" fontFamily="'Poppins', sans-serif" textAlign="center">
+                  By tapping Sign Up, you agree to our{' '}
+                  <Link href="#" color={subtleText} textDecoration="underline">Terms</Link>,{' '}
+                  <Link href="#" color={subtleText} textDecoration="underline">Privacy Policy</Link> and{' '}
+                  <Link href="#" color={subtleText} textDecoration="underline">Community Rules</Link>.
+                </Text>
+              )}
+            </>
           )}
         </Box>
       </Flex>

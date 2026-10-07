@@ -22,6 +22,7 @@ import DiaryEditor from './Pages/DiaryEditor';
 import Insights from './Pages/Insights';
 import Counselors from './Pages/Counselors';
 import Notifications from './Pages/Notifications';
+import Inbox from './Pages/Inbox';
 import Safety from './Pages/Safety';
 import Admin from './Pages/Admin';
 
@@ -59,6 +60,7 @@ function AppLayout() {
       <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
       <Route path="/counselors" element={<Counselors />} />
       <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+      <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
       <Route path="/safety" element={<Safety />} />
       <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -87,6 +89,7 @@ function AppLayout() {
           mx={isNoConstraint ? 0 : 'auto'}
           w="100%"
           px={isNoConstraint ? 0 : { base: 4, md: 6, lg: 8 }}
+          pb={isAuthenticated ? { base: '72px', md: 0 } : 0}
         >
           {routesElement}
         </Box>

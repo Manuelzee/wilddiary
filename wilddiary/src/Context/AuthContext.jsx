@@ -84,9 +84,35 @@ export function AuthProvider({ children }) {
     } catch (error) { return { success: false, error: error.message }; }
   };
 
+  const forgotPassword = async (email) => {
+    try {
+      const data = await apiRequest('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+      return { success: true, message: data.message, dev_otp: data.dev_otp };
+    } catch (error) {
+      return { success: false, error: error.message, status: error.status, code: error.code };
+    }
+  };
+
+  const resetPassword = async (email, otp, newPassword) => {
+    try {
+      const data = await apiRequest('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp, new_password: newPassword }),
+      });
+      return { success: true, message: data.message };
+    } catch (error) {
+      return { success: false, error: error.message, status: error.status, code: error.code };
+    }
+  };
+
   const value = {
     user, token, loading, login, register, logout: clearSession,
-    updateProfile, changePassword, deactivateAccount, isAuthenticated: Boolean(user),
+    updateProfile, changePassword, deactivateAccount,
+    forgotPassword, resetPassword,
+    isAuthenticated: Boolean(user),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

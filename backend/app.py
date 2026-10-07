@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import os
 import re
+import secrets
 from functools import wraps
 
 import jwt
@@ -13,6 +14,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from db import CONTENT_TABLES, IntegrityError, backend_name, fetch_all, fetch_one, init_db, transaction
 from ai_service import generate_reply, generate_post_insight
+from email_service import send_password_reset_email
 
 
 load_dotenv()
@@ -250,6 +252,108 @@ def register_routes(app):
         with transaction() as connection:
             connection.execute("UPDATE users SET last_login_at=CURRENT_TIMESTAMP WHERE id=?", (user["id"],))
         return jsonify(token=issue_token(user), user=public_user(user))
+
+    @app.post("/api/auth/forgot-password")
+    def forgot_password():
+        data = request.get_json(silent=True) or {}
+        email = clean_text(data.get("email"), 254).lower()
+        if not EMAIL_PATTERN.fullmatch(email):
+            return api_error("Enter a valid email address.")
+
+        one_hour_ago = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
+        recent_requests = fetch_one(
+            "SELECT COUNT(*) count FROM password_resets WHERE lower(email)=lower(?) AND created_at >= ?",
+            (email, one_hour_ago),
+        )
+        if recent_requests and recent_requests["count"] >= 5:
+            return api_error(
+                "Too many password reset requests. Please wait before requesting another code.",
+                429,
+                "rate_limited",
+            )
+
+        user = fetch_one("SELECT id, is_active FROM users WHERE lower(email)=lower(?)", (email,))
+        generic_message = "If an account with that email exists, a 6-digit verification code has been sent."
+        dev_otp = None
+        is_prod = os.getenv("APP_ENV", "development").lower() == "production" and not app.config.get("TESTING")
+
+        if user and user.get("is_active", 1):
+            otp = f"{secrets.randbelow(1_000_000):06d}"
+            otp_hash = hashlib.sha256(otp.encode("utf-8")).hexdigest()
+            expires_at = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M:%S")
+
+            with transaction() as connection:
+                connection.execute("DELETE FROM password_resets WHERE lower(email)=lower(?)", (email,))
+                connection.execute(
+                    "INSERT INTO password_resets(email, otp_hash, expires_at) VALUES(?,?,?)",
+                    (email, otp_hash, expires_at),
+                )
+
+            try:
+                send_password_reset_email(email, otp)
+            except Exception as exc:
+                app.logger.exception("Failed to dispatch password reset email to %s: %s", email, exc)
+                if is_prod and os.getenv("RESEND_API_KEY"):
+                    return api_error("Unable to deliver verification email. Please try again shortly.", 502, "email_delivery_failed")
+
+            if not is_prod or not os.getenv("RESEND_API_KEY"):
+                dev_otp = otp
+
+        response_body = {"message": generic_message}
+        if dev_otp:
+            response_body["dev_otp"] = dev_otp
+        return jsonify(response_body)
+
+    @app.post("/api/auth/reset-password")
+    def reset_password():
+        data = request.get_json(silent=True) or {}
+        email = clean_text(data.get("email"), 254).lower()
+        otp = str(data.get("otp", "")).strip()
+        new_password = data.get("new_password", "")
+
+        if not EMAIL_PATTERN.fullmatch(email):
+            return api_error("Enter a valid email address.")
+        if not otp or len(otp) < 4 or len(otp) > 10:
+            return api_error("Enter the 6-digit verification code sent to your email.")
+        if not isinstance(new_password, str) or len(new_password) < 8 or len(new_password) > 128:
+            return api_error("Password must be between 8 and 128 characters.")
+
+        record = fetch_one(
+            "SELECT id, otp_hash, expires_at, attempts FROM password_resets WHERE lower(email)=lower(?) ORDER BY id DESC LIMIT 1",
+            (email,),
+        )
+        if not record:
+            return api_error("No reset request found for this email, or code has expired. Request a new code.", 400, "invalid_code")
+
+        now_utc = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        if record["expires_at"] < now_utc:
+            with transaction() as connection:
+                connection.execute("DELETE FROM password_resets WHERE id=?", (record["id"],))
+            return api_error("Verification code has expired. Please request a new code.", 400, "expired_code")
+
+        if record.get("attempts", 0) >= 5:
+            with transaction() as connection:
+                connection.execute("DELETE FROM password_resets WHERE id=?", (record["id"],))
+            return api_error("Too many failed attempts. Please request a new verification code.", 429, "too_many_attempts")
+
+        computed_hash = hashlib.sha256(otp.encode("utf-8")).hexdigest()
+        if not hmac.compare_digest(computed_hash, record["otp_hash"]):
+            with transaction() as connection:
+                connection.execute("UPDATE password_resets SET attempts=attempts+1 WHERE id=?", (record["id"],))
+            return api_error("Incorrect verification code. Please check your email and try again.", 400, "incorrect_code")
+
+        user = fetch_one("SELECT id FROM users WHERE lower(email)=lower(?)", (email,))
+        if not user:
+            return api_error("Account not found.", 404, "not_found")
+
+        with transaction() as connection:
+            connection.execute(
+                "UPDATE users SET password_hash=?, token_version=token_version+1, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (generate_password_hash(new_password, method="scrypt"), user["id"]),
+            )
+            connection.execute("DELETE FROM password_resets WHERE lower(email)=lower(?)", (email,))
+
+        return jsonify(message="Your password has been successfully reset. Please sign in with your new password.")
 
     @app.get("/api/auth/me")
     @auth_required

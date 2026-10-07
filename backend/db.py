@@ -44,12 +44,21 @@ def backend_name():
 
 
 def require_persistent_database():
-    """Prevent production from ever storing accounts on an ephemeral disk."""
+    """Prevent production from ever storing accounts on an ephemeral disk unless explicitly bypassed."""
     if os.getenv("APP_ENV", "development").lower() == "production" and not is_postgres():
+        if os.getenv("ALLOW_EPHEMERAL_SQLITE", "").lower() in ("true", "1", "yes"):
+            import logging
+            logging.getLogger("wilddiary").warning(
+                "WARNING: Running in production with ephemeral SQLite storage because ALLOW_EPHEMERAL_SQLITE is enabled. "
+                "Data will be lost on container restart or redeploy."
+            )
+            return
         raise RuntimeError(
             "DATABASE_URL must be set to a persistent PostgreSQL database in production; "
-            "refusing to start with temporary SQLite storage."
+            "refusing to start with temporary SQLite storage. "
+            "(To bypass for temporary testing without PostgreSQL, set ALLOW_EPHEMERAL_SQLITE=true in your environment variables)."
         )
+
 
 
 # --------------------------------------------------------------------------- #
@@ -377,6 +386,14 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
     details TEXT,
     created_at TEXT NOT NULL DEFAULT {NOW}
 );
+CREATE TABLE IF NOT EXISTS password_resets (
+    id {PK},
+    email TEXT NOT NULL {NOCASE},
+    otp_hash TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT {NOW}
+);
 CREATE INDEX IF NOT EXISTS idx_posts_status_created ON posts(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category);
 CREATE INDEX IF NOT EXISTS idx_posts_user_created ON posts(user_id, created_at DESC);
@@ -390,11 +407,13 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_r
 CREATE INDEX IF NOT EXISTS idx_reports_post ON reports(post_id);
 CREATE INDEX IF NOT EXISTS idx_comment_reports_comment ON comment_reports(comment_id);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON admin_audit_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_password_resets_email ON password_resets(email, expires_at);
 """
 
 _PG_EXTRA = """
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_lower ON users (lower(username));
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users (lower(email));
+CREATE INDEX IF NOT EXISTS idx_password_resets_email_lower ON password_resets (lower(email));
 """
 
 
@@ -452,6 +471,6 @@ def init_db():
 
 # Tables wiped by an admin "clear data" request, children first.
 CONTENT_TABLES = [
-    "comment_reports", "reports", "reactions", "ai_insights", "comments", "posts",
+    "password_resets", "comment_reports", "reports", "reactions", "ai_insights", "comments", "posts",
     "chat_messages", "chat_conversations", "diary_entries", "notifications",
 ]
