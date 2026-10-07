@@ -208,11 +208,12 @@ class ApiTestCase(unittest.TestCase):
             with patch.dict(os.environ, {"JWT_SECRET": "too-short"}, clear=False):
                 with self.assertRaisesRegex(RuntimeError, "at least 32 characters"):
                     create_app()
-    def test_production_database_fallback(self):
+    def test_production_database_requirement(self):
         from db import require_persistent_database
         with patch.dict(os.environ, {"APP_ENV": "production", "DATABASE_URL": ""}, clear=False):
-            # Does not crash; falls back gracefully to SQLite
-            require_persistent_database()
+            with self.assertRaisesRegex(RuntimeError, "DATABASE_URL must be set to a persistent PostgreSQL"):
+                require_persistent_database()
+
 
     def test_full_post_comment_reaction_flow_and_anonymity(self):
         owner = self.register("post_owner", "owner@example.com")

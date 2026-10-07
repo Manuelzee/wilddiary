@@ -44,15 +44,13 @@ def backend_name():
 
 
 def require_persistent_database():
-    """Warn if running without a persistent PostgreSQL database in production, but continue with SQLite fallback so the deployment never crashes."""
+    """Prevent production from ever storing accounts on an ephemeral disk."""
     if os.getenv("APP_ENV", "development").lower() == "production" and not is_postgres():
-        import logging
-        logging.getLogger("wilddiary").warning(
-            "Notice: DATABASE_URL is not set. WildDiary is starting with local SQLite storage (%s). "
-            "Note: On ephemeral cloud hosts (like Render free tier), data will reset when the instance restarts or redeploys. "
-            "To persist data permanently, add a DATABASE_URL pointing to PostgreSQL in your Render Environment.",
-            database_path()
+        raise RuntimeError(
+            "DATABASE_URL must be set to a persistent PostgreSQL database in production; "
+            "refusing to start with temporary SQLite storage."
         )
+
 
 
 
