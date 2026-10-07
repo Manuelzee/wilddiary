@@ -571,6 +571,17 @@ def register_routes(app):
         except Exception:
             app.logger.exception("Counseling engine failed with conversation history")
             reply, mode = generate_reply([{"role": "user", "content": content}])
+        if mode == "referral":
+            counselor = fetch_one("""SELECT u.username,p.expertise,p.availability
+                FROM counselor_profiles p JOIN users u ON u.id=p.user_id
+                WHERE u.role='counselor' AND u.is_active=1 AND p.is_verified=1
+                ORDER BY CASE WHEN COALESCE(p.availability,'')='' THEN 1 ELSE 0 END,u.username LIMIT 1""")
+            if counselor:
+                details = f" ({counselor['expertise']})" if counselor.get("expertise") else ""
+                availability = f" Availability: {counselor['availability']}." if counselor.get("availability") else ""
+                reply += f" A verified counselor currently listed is {counselor['username']}{details}.{availability} Visit /counselors to view their profile."
+            else:
+                reply += " There are no verified counselors listed right now; please seek a licensed professional through a recognised local clinic or professional association."
         title = content[:57] + ("…" if len(content) > 57 else "")
         with transaction() as connection:
             user_cursor = connection.execute("INSERT INTO chat_messages(conversation_id,role,content) VALUES(?,'user',?)", (conversation_id, content))

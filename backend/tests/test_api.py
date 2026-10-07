@@ -189,6 +189,38 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(crisis.get_json()["mode"], "crisis")
         self.assertIn("112", crisis.get_json()["assistant_message"]["content"])
 
+    def test_chat_rejects_hate_and_refers_to_verified_human_counselor(self):
+        member = self.register("support_seeker", "support-seeker@example.com")
+        conversation_id = self.client.post(
+            "/api/chat/conversations", headers=self.auth(member)
+        ).get_json()["id"]
+
+        hate = self.client.post(
+            f"/api/chat/conversations/{conversation_id}/messages",
+            headers=self.auth(member),
+            json={"content": "I hate people of another religion and they should not exist."},
+        ).get_json()
+        self.assertEqual(hate["mode"], "safety")
+        self.assertIn("won't support hatred", hate["assistant_message"]["content"])
+
+        counselor = self.register("kind_counselor", "counselor@example.com").get_json()
+        with self.app.app_context():
+            with transaction() as connection:
+                connection.execute("UPDATE users SET role='counselor' WHERE id=?", (counselor["user"]["id"],))
+                connection.execute(
+                    "INSERT INTO counselor_profiles(user_id,bio,expertise,availability,is_verified) VALUES(?,?,?,?,1)",
+                    (counselor["user"]["id"], "Supportive counselor", "anxiety and stress", "Weekdays"),
+                )
+
+        referral = self.client.post(
+            f"/api/chat/conversations/{conversation_id}/messages",
+            headers=self.auth(member),
+            json={"content": "I need to speak with a professional counselor."},
+        ).get_json()
+        self.assertEqual(referral["mode"], "referral")
+        self.assertIn("kind_counselor", referral["assistant_message"]["content"])
+        self.assertIn("/counselors", referral["assistant_message"]["content"])
+
     def test_private_diary_insights_and_notifications(self):
         writer = self.register("diary_writer", "diary@example.com")
         supporter = self.register("diary_supporter", "supporter@example.com")

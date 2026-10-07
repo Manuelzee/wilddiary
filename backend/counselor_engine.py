@@ -119,6 +119,26 @@ DANGER_FROM_OTHERS = re.compile(
     r"afraid (?:to go|of going) home|not safe at home)\b", re.I)
 HARM_OTHERS = re.compile(r"\b(kill (?:him|her|them|someone|everyone)|hurt (?:him|her|them|someone) badly)\b", re.I)
 
+# Keep Harbor supportive without endorsing attacks on protected groups.  The
+# expression intentionally looks for hostile intent around identity terms,
+# rather than treating a user's identity or a quoted slur as wrongdoing.
+HATEFUL_INTENT = re.compile(
+    r"\b(?:hate|despise|attack|hurt|kill|remove|ban|exclude|inferior|disgusting|shouldn'?t exist)\b"
+    r".{0,45}\b(?:race|racial|religion|religious|muslim|christian|jew(?:ish)?|black|white|"
+    r"gay|lesbian|trans(?:gender)?|disabled|disability|tribe|ethnic|ethnicity|immigrant|women|men)\b|"
+    r"\b(?:race|racial|religion|religious|muslim|christian|jew(?:ish)?|black|white|gay|lesbian|"
+    r"trans(?:gender)?|disabled|disability|tribe|ethnic|ethnicity|immigrant|women|men)\b"
+    r".{0,45}\b(?:inferior|disgusting|shouldn'?t exist|must die|need to die)\b", re.I)
+
+SEEKING_PROFESSIONAL = re.compile(
+    r"\b(?:need|want|find|speak|talk|connect|refer|recommend)\w*\b.{0,35}"
+    r"\b(?:counsel+or|therapist|psychologist|mental health professional|professional help)\b|"
+    r"\b(?:counsel+or|therapist|psychologist)\b.{0,25}\b(?:need|recommend|available|talk|speak)\w*\b", re.I)
+
+SEVERE_IMPAIRMENT = re.compile(
+    r"\b(?:can'?t|cannot|unable to)\s+(?:work|study|sleep|eat|function|cope|get out of bed)|"
+    r"\b(?:every day|for (?:weeks|months|years)|getting worse|nothing (?:is|has) helping)\b", re.I)
+
 DISTORTIONS = {
     "labeling": dict(pattern=r"\bi'?m (?:such )?(?:a |an )?(failure|loser|idiot|worthless|useless|stupid|disappointment|burden|mess)\b",
                      challenge="I noticed you called yourself {match}. That's a heavy label to carry. If a close friend were going through the same thing, would you describe them that way?"),
@@ -566,8 +586,28 @@ def _referral_needed(session):
     return session.turn >= 6 and (heavy >= 5 or risky_topic)
 
 
-REFERRAL_TEXT = (" If these feelings keep hanging around, talking with a qualified counselor could really help; "
-                 "you can find verified professionals on the Counselors page here on Wild Diary.")
+REFERRAL_TEXT = (" I think support from a qualified human counselor would be a good next step. "
+                 "You can open the Counselors page on Wild Diary to see verified professionals and choose someone "
+                 "whose expertise and availability fit your needs. Harbor can support you between conversations, "
+                 "but it cannot diagnose you or replace professional care.")
+
+
+def _professional_referral(session):
+    emotion = session.dominant_emotion()
+    validation = _validation(session, _seed(session.latest))
+    lead = validation or (f"It sounds like you've been feeling {EMOTIONS[emotion]['adj']}." if emotion else "I'm glad you asked for support.")
+    return f"{lead}{REFERRAL_TEXT} Would you like to open the Counselors page now?", "referral"
+
+
+def _respond_to_hate(session):
+    """De-escalate prejudice without shaming the person or validating hate."""
+    emotion = session.dominant_emotion()
+    feeling = f" I can hear that you're feeling {EMOTIONS[emotion]['adj']}." if emotion else ""
+    return (
+        "I can help you work through strong feelings, but I won't support hatred, dehumanising language, "
+        f"or harm toward people because of who they are.{feeling} Let's focus on the specific event or need "
+        "underneath that reaction without attacking a whole group. What happened that brought this feeling up?"
+    ), "safety"
 
 
 def _crisis_follow_up(session):
@@ -630,10 +670,18 @@ def generate_reply(messages):
     if risk:
         return _respond_to_risk(risk, session)
 
+    # 2. Respect and escalation boundaries.
+    if HATEFUL_INTENT.search(latest):
+        return _respond_to_hate(session)
+    if SEEKING_PROFESSIONAL.search(latest):
+        return _professional_referral(session)
+    if SEVERE_IMPAIRMENT.search(latest) and session.dominant_emotion():
+        return _professional_referral(session)
+
     intents = session.intents
     words = len(latest.split())
 
-    # 2. Social moments.
+    # 3. Social moments.
     if "ask_bot" in intents:
         return ("I'm Harbor, Wild Diary's built-in support companion. I'm not a human or a licensed therapist, but I'm designed around "
                 "real counseling approaches: listening without judgement, helping you untangle thoughts, and suggesting practical "
@@ -680,12 +728,14 @@ def generate_reply(messages):
 
     # 5. Responding after the user names a small step.
     if STEP_MARKER in session.last_bot and words >= 2 and "minimal" not in intents:
+        needs_referral = False
         reply = ("That sounds like a meaningful and realistic step. Small actions like that build momentum. It might help to "
                  "decide exactly when you'll do it, and notice how you feel afterwards. You could note it in your Diary.")
         if _referral_needed(session) or session.turn >= 6:
-            reply += REFERRAL_TEXT if not session.asked(REFERRAL_MARKER) else ""
+            needs_referral = not session.asked(REFERRAL_MARKER)
+            reply += REFERRAL_TEXT if needs_referral else ""
         reply += " Is there anything else on your mind you'd like to talk about?"
-        return reply, "counselor"
+        return reply, "referral" if needs_referral else "counselor"
 
     # 6. Positive update.
     if session.current_emotions.get("positive") and not any(k != "positive" for k in session.current_emotions):
@@ -737,6 +787,7 @@ def generate_reply(messages):
     reply = f"{opener} {question}"
     if _referral_needed(session):
         reply = f"{opener}{REFERRAL_TEXT} {question}"
+        return reply.strip(), "referral"
     return reply.strip(), "counselor"
 
 
