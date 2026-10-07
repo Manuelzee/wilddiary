@@ -100,6 +100,27 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(invalid_user.status_code, 401)
         self.assertEqual(invalid_user.get_json()["code"], "invalid_credentials")
 
+    def test_login_finds_mixed_case_existing_email_and_explains_disabled_account(self):
+        registered = self.register("persistent_member", "saved-user@example.com")
+        self.assertEqual(registered.status_code, 201)
+        user_id = registered.get_json()["user"]["id"]
+        with transaction() as connection:
+            connection.execute("UPDATE users SET email=? WHERE id=?", ("Saved-User@Example.com", user_id))
+
+        login = self.client.post("/api/auth/login", json={
+            "email": "saved-user@example.com", "password": "correct-horse-battery",
+        })
+        self.assertEqual(login.status_code, 200)
+        self.assertEqual(login.get_json()["user"]["id"], user_id)
+
+        with transaction() as connection:
+            connection.execute("UPDATE users SET is_active=0 WHERE id=?", (user_id,))
+        disabled = self.client.post("/api/auth/login", json={
+            "email": "saved-user@example.com", "password": "correct-horse-battery",
+        })
+        self.assertEqual(disabled.status_code, 403)
+        self.assertEqual(disabled.get_json()["code"], "account_disabled")
+
     def test_token_is_valid_across_app_instances_with_shared_secret(self):
         second_app = create_app({"TESTING": True, "JWT_SECRET": "test-secret"})
         registered = self.register("worker_member", "worker@example.com")

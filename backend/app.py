@@ -11,7 +11,7 @@ from flask import Flask, current_app, g, jsonify, request
 from flask_cors import CORS
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from db import CONTENT_TABLES, IntegrityError, fetch_all, fetch_one, init_db, transaction
+from db import CONTENT_TABLES, IntegrityError, backend_name, fetch_all, fetch_one, init_db, transaction
 from ai_service import generate_reply, generate_post_insight
 
 
@@ -196,6 +196,7 @@ def register_routes(app):
         return jsonify(
             status="healthy" if db_status == "ok" else "degraded",
             database=db_status,
+            database_backend=backend_name(),
             latency_ms=latency_ms,
             timestamp=t0.isoformat()
         ), (200 if db_status == "ok" else 503)
@@ -230,9 +231,16 @@ def register_routes(app):
         data = request.get_json(silent=True) or {}
         email = clean_text(data.get("email"), 254).lower()
         password = data.get("password", "")
-        user = fetch_one("SELECT * FROM users WHERE email=? AND is_active=1", (email,))
+        # lower() supports accounts imported from SQLite with mixed-case email.
+        user = fetch_one("SELECT * FROM users WHERE lower(email)=lower(?)", (email,))
         if not user:
             return api_error("Invalid email or password.", 401, "invalid_credentials")
+        if not user.get("is_active", 1):
+            return api_error(
+                "This account is currently disabled. Contact an administrator to restore access.",
+                403,
+                "account_disabled",
+            )
         valid, legacy = verify_password(user["password_hash"], password)
         if not valid:
             return api_error("Invalid email or password.", 401, "invalid_credentials")

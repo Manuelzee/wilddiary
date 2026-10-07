@@ -43,6 +43,15 @@ def backend_name():
     return "postgresql" if is_postgres() else "sqlite"
 
 
+def require_persistent_database():
+    """Prevent production from ever storing accounts on an ephemeral disk."""
+    if os.getenv("APP_ENV", "development").lower() == "production" and not is_postgres():
+        raise RuntimeError(
+            "DATABASE_URL must be set to a persistent PostgreSQL database in production; "
+            "refusing to start with temporary SQLite storage."
+        )
+
+
 # --------------------------------------------------------------------------- #
 # Errors
 # --------------------------------------------------------------------------- #
@@ -421,6 +430,7 @@ def _columns(connection, table):
 
 
 def init_db():
+    require_persistent_database()
     connection = get_connection()
     try:
         # Tables must exist before the column migrations, but the CREATE INDEX
