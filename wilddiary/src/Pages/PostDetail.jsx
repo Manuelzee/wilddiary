@@ -130,7 +130,7 @@ export default function PostDetail() {
 
   if (loading) {
     return (
-      <Flex flex="1" align="center" justify="center" direction="column" py={20} gap={4} fontFamily="'Poppins', sans-serif">
+      <Flex flex="1" align="center" justify="center" direction="column" py={20} gap={4}>
         <Spinner size="lg" color="brand.500" />
         <Text color={subtleText}>Loading diary details…</Text>
       </Flex>
@@ -139,11 +139,11 @@ export default function PostDetail() {
 
   if (errorMsg || !post) {
     return (
-      <Flex flex="1" direction="column" align="center" justify="center" maxW="2xl" mx="auto" px={4} py={16} textAlign="center" gap={4} fontFamily="'Poppins', sans-serif">
+      <Flex flex="1" direction="column" align="center" justify="center" maxW="2xl" mx="auto" px={4} py={16} textAlign="center" gap={4}>
         <Box fontSize="3xl" color="red.400"><BsShieldExclamation size={48} /></Box>
-        <Heading size="md" fontFamily="'Poppins', sans-serif">Diary Not Available</Heading>
+        <Heading size="md">Diary Not Available</Heading>
         <Text color={subtleText} fontSize="sm">{errorMsg || 'This diary does not exist or has been removed.'}</Text>
-        <Button as={RouterLink} to="/feed" variant="outline" borderRadius="full" fontFamily="'Poppins', sans-serif">Return to Feed</Button>
+        <Button as={RouterLink} to="/feed" variant="outline" borderRadius="full">Return to Feed</Button>
       </Flex>
     );
   }
@@ -151,9 +151,9 @@ export default function PostDetail() {
   const isCounselor = post.author_role === 'counselor';
 
   return (
-    <Box flex="1" maxW="4xl" mx="auto" w="100%" px={4} py={8} textAlign="left" fontFamily="'Poppins', sans-serif">
+    <Box flex="1" maxW="4xl" mx="auto" w="100%" px={4} py={8} textAlign="left">
       <Button as={RouterLink} to="/feed" variant="ghost" size="sm" mb={6}
-        leftIcon={<MdArrowBack size={18} />} borderRadius="full" fontFamily="'Poppins', sans-serif" fontWeight="600">
+        leftIcon={<MdArrowBack size={18} />} borderRadius="full" fontWeight="600">
         Back to Feed
       </Button>
 
@@ -172,22 +172,22 @@ export default function PostDetail() {
               </Box>
               <Box>
                 <HStack spacing={2}>
-                  <Text fontWeight="700" fontSize="sm" fontFamily="'Poppins', sans-serif">{post.author_name}</Text>
-                  {isCounselor && <Badge colorScheme="green" borderRadius="full" fontSize="9px" fontFamily="'Poppins', sans-serif">✓ Counselor</Badge>}
+                  <Text fontWeight="700" fontSize="sm">{post.author_name}</Text>
+                  {isCounselor && <Badge colorScheme="green" borderRadius="full" fontSize="9px">✓ Counselor</Badge>}
                 </HStack>
-                <Text fontSize="xs" color={subtleText} fontFamily="'Poppins', sans-serif">
+                <Text fontSize="xs" color={subtleText}>
                   {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </Text>
               </Box>
             </HStack>
             <HStack spacing={2}>
-              <Badge colorScheme="purple" borderRadius="md" fontSize="xs" fontFamily="'Poppins', sans-serif" textTransform="capitalize">{post.category}</Badge>
+              <Badge colorScheme="purple" borderRadius="md" fontSize="xs" textTransform="capitalize">{post.category}</Badge>
               {user && (post.user_id === user.id || user.role === 'admin') && (
                 <Tooltip label="Delete diary post" hasArrow>
                   <IconButton
                     aria-label="Delete diary post"
                     icon={<MdDeleteOutline size={18} />}
-                    size="xs"
+                    size="sm"
                     variant="ghost"
                     colorScheme="red"
                     onClick={handleDeletePost}
@@ -196,7 +196,7 @@ export default function PostDetail() {
               )}
             </HStack>
           </Flex>
-          <Text mt={4} fontSize="lg" lineHeight="1.8" whiteSpace="pre-wrap" fontFamily="'Poppins', sans-serif">{post.content}</Text>
+          <Text mt={4} fontSize="lg" lineHeight="1.8" whiteSpace="pre-wrap">{post.content}</Text>
         </Box>
 
         {/* AI Insight */}
@@ -204,27 +204,27 @@ export default function PostDetail() {
           bg={isDark ? 'rgba(59,130,246,0.06)' : 'rgba(239,246,255,0.9)'}
           borderRadius="2xl" position="relative" overflow="hidden">
           <Box position="absolute" right={0} top={0} w={24} h={24} bg={isDark ? 'blue.500' : 'blue.100'} opacity={0.15} filter="blur(40px)" pointerEvents="none" />
-          <HStack mb={3} color="blue.400" fontWeight="700" fontFamily="'Poppins', sans-serif">
+          <HStack mb={3} color="blue.400" fontWeight="700">
             <MdTipsAndUpdates size={20} />
-            <Text fontFamily="'Poppins', sans-serif">Supportive AI Advisor</Text>
+            <Text>Supportive AI Advisor</Text>
           </HStack>
           {aiInsight ? (
-            <Text fontSize="sm" lineHeight="1.8" color={isDark ? 'gray.300' : 'gray.700'} fontStyle="italic" fontFamily="'Poppins', sans-serif">
+            <Text fontSize="sm" lineHeight="1.8" color={isDark ? 'gray.300' : 'gray.700'} fontStyle="italic">
               "{aiInsight.startsWith('AI Insight: ') ? aiInsight.slice(12) : aiInsight}"
             </Text>
           ) : (
             <VStack align="flex-start" spacing={3}>
-              <Text fontSize="xs" color={subtleText} fontFamily="'Poppins', sans-serif">
+              <Text fontSize="xs" color={subtleText}>
                 Would you like an immediate, empathetic AI perspective to guide you or reflect on this struggle?
               </Text>
               {isAuthenticated ? (
                 <Button onClick={handleRequestAiInsight} isLoading={fetchingAi} loadingText="Generating…"
                   size="sm" colorScheme="blue" borderRadius="full" leftIcon={<MdTipsAndUpdates size={14} />}
-                  fontFamily="'Poppins', sans-serif" fontWeight="700">
+                  fontWeight="700">
                   Get AI Insight
                 </Button>
               ) : (
-                <Text fontSize="xs" color="orange.400" fontWeight="600" fontFamily="'Poppins', sans-serif">
+                <Text fontSize="xs" color="orange.400" fontWeight="600">
                   Please sign in to access AI advisor features.
                 </Text>
               )}
@@ -236,14 +236,14 @@ export default function PostDetail() {
         <Box>
           <HStack mb={4} spacing={2}>
             <MdChatBubbleOutline size={20} color={isDark ? '#555' : '#aaa'} />
-            <Heading size="md" fontFamily="'Poppins', sans-serif" fontWeight="800">Replies ({comments.length})</Heading>
+            <Heading size="md" fontWeight="800">Replies ({comments.length})</Heading>
           </HStack>
 
           <VStack spacing={3} align="stretch" mb={6}>
             {comments.length === 0 ? (
               <Flex align="center" justify="center" py={10}
                 border="2px dashed" borderColor={borderColor} borderRadius="2xl" textAlign="center">
-                <Text color={subtleText} fontSize="sm" fontFamily="'Poppins', sans-serif">No replies yet. Be the first to share support.</Text>
+                <Text color={subtleText} fontSize="sm">No replies yet. Be the first to share support.</Text>
               </Flex>
             ) : (
               comments.map((comment) => {
@@ -256,21 +256,21 @@ export default function PostDetail() {
                     borderRadius="xl" textAlign="left">
                     <Flex justify="space-between" align="center" mb={2}>
                       <HStack spacing={2}>
-                        <Text fontWeight="700" fontSize="sm" color={isComCounselor ? 'green.400' : undefined} fontFamily="'Poppins', sans-serif">
+                        <Text fontWeight="700" fontSize="sm" color={isComCounselor ? 'green.400' : undefined}>
                           {comment.author_name}
                         </Text>
-                        {isComCounselor && <Badge colorScheme="green" borderRadius="full" fontSize="8px" fontFamily="'Poppins', sans-serif">✓ Counselor</Badge>}
+                        {isComCounselor && <Badge colorScheme="green" borderRadius="full" fontSize="8px">✓ Counselor</Badge>}
                       </HStack>
                       <HStack spacing={1}>
-                        <Text fontSize="xs" color={subtleText} fontFamily="'Poppins', sans-serif">
+                        <Text fontSize="xs" color={subtleText}>
                           {new Date(comment.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </Text>
                         {user && (comment.user_id === user.id || post.user_id === user.id || user.role === 'admin') && (
                           <Tooltip label="Delete reply" hasArrow>
                             <IconButton
                               aria-label="Delete reply"
-                              icon={<MdDeleteOutline size={14} />}
-                              size="xs"
+                              icon={<MdDeleteOutline size={16} />}
+                              size="sm"
                               variant="ghost"
                               colorScheme="red"
                               onClick={() => handleDeleteComment(comment.id)}
@@ -292,9 +292,9 @@ export default function PostDetail() {
                       </HStack>
                     </Flex>
                     {isComUnderReview && (
-                      <Text fontSize="xs" color="orange.400" fontWeight="600" mb={2} fontFamily="'Poppins', sans-serif">⚠️ This reply is under moderation review.</Text>
+                      <Text fontSize="xs" color="orange.400" fontWeight="600" mb={2}>⚠️ This reply is under moderation review.</Text>
                     )}
-                    <Text fontSize="14px" lineHeight="1.7" whiteSpace="pre-wrap" fontFamily="'Poppins', sans-serif"
+                    <Text fontSize="14px" lineHeight="1.7" whiteSpace="pre-wrap"
                       filter={isComUnderReview ? 'blur(4px)' : 'none'} userSelect={isComUnderReview ? 'none' : 'auto'}>
                       {comment.content}
                     </Text>
@@ -308,10 +308,10 @@ export default function PostDetail() {
           <Box p={5} bg={cardBg} border="1px solid" borderColor={borderColor} borderRadius="2xl">
             {isAuthenticated ? (
               <Box as="form" onSubmit={handleCommentSubmit}>
-                <Heading size="sm" mb={4} fontFamily="'Poppins', sans-serif" fontWeight="700">Reply to this Diary</Heading>
+                <Heading size="sm" mb={4} fontWeight="700">Reply to this Diary</Heading>
                 {commentWarning && (
                   <Text fontSize="xs" color="orange.400" fontWeight="600" mb={3} p={2}
-                    bg={isDark ? 'orange.900' : 'orange.50'} borderRadius="lg" fontFamily="'Poppins', sans-serif">
+                    bg={isDark ? 'orange.900' : 'orange.50'} borderRadius="lg">
                     {commentWarning}
                   </Text>
                 )}
@@ -319,23 +319,23 @@ export default function PostDetail() {
                   <Textarea rows={3} required
                     placeholder={user?.role === 'counselor' ? 'Write your professional counselor response…' : 'Write your supportive words…'}
                     value={commentText} onChange={handleCommentTextChange} resize="vertical"
-                    fontFamily="'Poppins', sans-serif" fontSize="sm" borderRadius="xl" />
+                    fontSize={{ base: '16px', md: 'sm' }} borderRadius="xl" />
                 </FormControl>
                 <Flex justify="space-between" align="center" flexWrap="wrap" gap={3}>
                   <HStack spacing={2} cursor="pointer" onClick={() => setIsAnonymous(!isAnonymous)}
-                    fontSize="xs" color={subtleText} fontFamily="'Poppins', sans-serif" fontWeight="600">
+                    fontSize="xs" color={subtleText} fontWeight="600">
                     <Switch size="sm" isChecked={isAnonymous} onChange={(e) => setIsAnonymous(e.target.checked)} colorScheme="brand" />
-                    <Text fontFamily="'Poppins', sans-serif">Reply anonymously</Text>
+                    <Text>Reply anonymously</Text>
                   </HStack>
                   <Button type="submit" size="sm" isLoading={submittingComment} loadingText="Replying…"
                     isDisabled={!commentText.trim()} borderRadius="full"
-                    rightIcon={<MdSend size={14} />} fontFamily="'Poppins', sans-serif" fontWeight="700">
+                    rightIcon={<MdSend size={14} />} fontWeight="700">
                     Post Reply
                   </Button>
                 </Flex>
               </Box>
             ) : (
-              <Text fontSize="sm" textAlign="center" color={subtleText} fontFamily="'Poppins', sans-serif">
+              <Text fontSize="sm" textAlign="center" color={subtleText}>
                 You must be <Link as={RouterLink} to="/auth" color="brand.500" fontWeight="700">signed in</Link> to offer support or leave a comment.
               </Text>
             )}

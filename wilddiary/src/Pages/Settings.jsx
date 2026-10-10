@@ -137,41 +137,41 @@ function AccountInfoPanel({ user, c, updateProfile }) {
   return (
     <VStack spacing={5} align="stretch">
       <HStack spacing={4} align="center">
-        <Avatar size="lg" name={user?.username} bg="brand.500" color="white" fontFamily="'Poppins', sans-serif" />
+        <Avatar size="lg" name={user?.username} bg="brand.500" color="white" />
         <Box>
-          <Text fontWeight="700" fontSize="lg" color={c.text} fontFamily="'Poppins', sans-serif" textTransform="capitalize">{user?.username}</Text>
-          <Badge colorScheme={user?.role === 'counselor' ? 'green' : 'purple'} borderRadius="full" fontFamily="'Poppins', sans-serif" textTransform="capitalize">
+          <Text fontWeight="700" fontSize="lg" color={c.text} textTransform="capitalize">{user?.username}</Text>
+          <Badge colorScheme={user?.role === 'counselor' ? 'green' : 'purple'} borderRadius="full" textTransform="capitalize">
             {user?.role || 'user'}
           </Badge>
         </Box>
         <Button ml="auto" size="sm" leftIcon={editing ? <MdClose size={14} /> : <MdEdit size={14} />}
-          variant="outline" borderRadius="full" fontFamily="'Poppins', sans-serif"
+          variant="outline" borderRadius="full"
           onClick={() => setEditing(v => !v)}>
           {editing ? 'Cancel' : 'Edit'}
         </Button>
       </HStack>
       <Divider borderColor={c.border} />
       <FormControl>
-        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} fontWeight="700">Username</FormLabel>
+        <FormLabel fontSize="sm" color={c.text} fontWeight="700">Username</FormLabel>
         <Input value={username} onChange={e => setUsername(e.target.value)} isReadOnly={!editing}
           bg={editing ? c.inputBg : 'transparent'} border={editing ? '1px solid' : 'none'} borderColor={c.border}
-          fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} pl={editing ? 3 : 0} />
+          fontSize={{ base: '16px', md: 'sm' }} color={c.text} pl={editing ? 3 : 0} />
       </FormControl>
       <FormControl>
-        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} fontWeight="700">Email address</FormLabel>
+        <FormLabel fontSize="sm" color={c.text} fontWeight="700">Email address</FormLabel>
         <Input value={email} onChange={e => setEmail(e.target.value)} isReadOnly={!editing}
           bg={editing ? c.inputBg : 'transparent'} border={editing ? '1px solid' : 'none'} borderColor={c.border}
-          fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} pl={editing ? 3 : 0} type="email" />
+          fontSize={{ base: '16px', md: 'sm' }} color={c.text} pl={editing ? 3 : 0} type="email" />
       </FormControl>
       <FormControl>
-        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} fontWeight="700">Phone number</FormLabel>
+        <FormLabel fontSize="sm" color={c.text} fontWeight="700">Phone number</FormLabel>
         <Input placeholder="Not set" isReadOnly={!editing}
           bg={editing ? c.inputBg : 'transparent'} border={editing ? '1px solid' : 'none'} borderColor={c.border}
-          fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.subtle} pl={editing ? 3 : 0} />
-        <FormHelperText fontFamily="'Poppins', sans-serif" fontSize="xs" color={c.subtle}>Optional — used for account recovery only</FormHelperText>
+          fontSize={{ base: '16px', md: 'sm' }} color={c.subtle} pl={editing ? 3 : 0} />
+        <FormHelperText fontSize="xs" color={c.subtle}>Optional — used for account recovery only</FormHelperText>
       </FormControl>
       {editing && (
-        <Button leftIcon={<MdSave size={16} />} onClick={save} borderRadius="full" fontFamily="'Poppins', sans-serif" alignSelf="flex-start">
+        <Button leftIcon={<MdSave size={16} />} onClick={save} borderRadius="full" alignSelf="flex-start">
           Save changes
         </Button>
       )}
@@ -199,19 +199,19 @@ function ChangePasswordPanel({ c, changePassword, navigate }) {
     <VStack spacing={5} align="stretch">
       {[['curr', 'Current password'], ['next', 'New password'], ['confirm', 'Confirm new password']].map(([k, label]) => (
         <FormControl key={k}>
-          <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} fontWeight="700">{label}</FormLabel>
+          <FormLabel fontSize="sm" color={c.text} fontWeight="700">{label}</FormLabel>
           <InputGroup>
             <Input type={show[k] ? 'text' : 'password'} value={pw[k]} onChange={e => setPw(p => ({ ...p, [k]: e.target.value }))}
-              bg={c.inputBg} border="1px solid" borderColor={c.border} borderRadius="lg" fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} />
+              bg={c.inputBg} border="1px solid" borderColor={c.border} borderRadius="lg" fontSize={{ base: '16px', md: 'sm' }} color={c.text} />
             <InputRightElement><IconButton aria-label={`Toggle ${label.toLowerCase()} visibility`} icon={show[k] ? <MdVisibilityOff size={16} /> : <MdVisibility size={16} />} variant="ghost" size="xs" onClick={() => setShow(s => ({ ...s, [k]: !s[k] }))} /></InputRightElement>
           </InputGroup>
-          {k === 'next' && <FormHelperText fontFamily="'Poppins', sans-serif" fontSize="xs" color={c.subtle}>At least 8 characters</FormHelperText>}
+          {k === 'next' && <FormHelperText fontSize="xs" color={c.subtle}>At least 8 characters</FormHelperText>}
         </FormControl>
       ))}
-      <Button onClick={submit} borderRadius="full" fontFamily="'Poppins', sans-serif" alignSelf="flex-start">
+      <Button onClick={submit} borderRadius="full" alignSelf="flex-start">
         Update password
       </Button>
-      <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif">
+      <Text fontSize="xs" color={c.subtle}>
         After changing your password you will be asked to sign in again on all devices.
       </Text>
     </VStack>
@@ -246,18 +246,17 @@ function DownloadDataPanel({ c }) {
   return (
     <VStack spacing={5} align="stretch">
       <Alert status="info" borderRadius="xl" bg={c.d ? 'rgba(59,130,246,0.08)' : 'blue.50'} border="1px solid" borderColor={c.d ? 'blue.800' : 'blue.200'}>
-        <AlertIcon /><AlertDescription fontFamily="'Poppins', sans-serif" fontSize="sm">Your archive includes your profile, private diary entries, community posts, and comments.</AlertDescription>
+        <AlertIcon /><AlertDescription fontSize="sm">Your archive includes your profile, private diary entries, community posts, and comments.</AlertDescription>
       </Alert>
       {['Private diary entries & content', 'Community posts you shared', 'Comments and responses', 'Account information', 'Privacy preferences'].map(item => (
         <HStack key={item} p={3} bg={c.inputBg} borderRadius="xl" spacing={3}>
           <MdCheck size={16} color="#7c3aed" />
-          <Text fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">{item}</Text>
+          <Text fontSize="sm" color={c.text}>{item}</Text>
         </HStack>
       ))}
       <Button
         leftIcon={<MdDownload size={16} />}
         borderRadius="full"
-        fontFamily="'Poppins', sans-serif"
         alignSelf="flex-start"
         isLoading={downloading}
         loadingText="Exporting data…"
@@ -265,7 +264,7 @@ function DownloadDataPanel({ c }) {
       >
         Download JSON Archive
       </Button>
-      <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif">
+      <Text fontSize="xs" color={c.subtle}>
         Your complete data archive will be generated and downloaded directly to your device.
       </Text>
     </VStack>
@@ -278,24 +277,24 @@ function DeactivatePanel({ c, deactivateAccount, navigate }) {
     <VStack spacing={5} align="stretch">
       <Alert status="error" borderRadius="xl">
         <AlertIcon /><Box>
-          <AlertTitle fontFamily="'Poppins', sans-serif" fontSize="sm">This action is reversible</AlertTitle>
-          <AlertDescription fontFamily="'Poppins', sans-serif" fontSize="xs">Deactivating disables sign-in and permanently anonymizes your existing contributions. Contact support if you need account recovery.</AlertDescription>
+          <AlertTitle fontSize="sm">This action is reversible</AlertTitle>
+          <AlertDescription fontSize="xs">Deactivating disables sign-in and permanently anonymizes your existing contributions. Contact support if you need account recovery.</AlertDescription>
         </Box>
       </Alert>
       {['Your existing diary entries and replies will become anonymous', 'Your account will no longer be able to sign in', 'Your data remains subject to the retention policy', 'Contact support before proceeding if you need an archive'].map(item => (
         <HStack key={item} p={3} bg={c.inputBg} borderRadius="xl" spacing={3}>
           <MdWarning size={16} color="#EF4444" />
-          <Text fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">{item}</Text>
+          <Text fontSize="sm" color={c.text}>{item}</Text>
         </HStack>
       ))}
       <FormControl>
-        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} fontWeight="700">Type DEACTIVATE to confirm</FormLabel>
+        <FormLabel fontSize="sm" color={c.text} fontWeight="700">Type DEACTIVATE to confirm</FormLabel>
         <Input value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="DEACTIVATE"
           bg={c.inputBg} border="1px solid" borderColor="red.400" borderRadius="lg"
-          fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} />
+          fontSize={{ base: '16px', md: 'sm' }} color={c.text} />
       </FormControl>
       <Button
-        colorScheme="red" borderRadius="full" fontFamily="'Poppins', sans-serif" alignSelf="flex-start"
+        colorScheme="red" borderRadius="full" alignSelf="flex-start"
         isDisabled={confirm !== 'DEACTIVATE'}
         onClick={async () => {
           const result = await deactivateAccount();
@@ -312,24 +311,24 @@ function RadioSettingPanel({ desc, options, defaultVal, c }) {
   const toast = useToast();
   return (
     <VStack spacing={5} align="stretch">
-      <Text fontSize="sm" color={c.subtle} fontFamily="'Poppins', sans-serif">{desc}</Text>
+      <Text fontSize="sm" color={c.subtle}>{desc}</Text>
       <RadioGroup value={val} onChange={setVal}>
         <Stack spacing={3}>
           {options.map(o => (
             <Box key={o.value} p={4} bg={val === o.value ? c.active : c.inputBg}
               borderRadius="xl" border="2px solid" borderColor={val === o.value ? 'brand.500' : 'transparent'}
               cursor="pointer" onClick={() => setVal(o.value)} transition="all 0.15s">
-              <Radio value={o.value} colorScheme="purple" fontFamily="'Poppins', sans-serif">
+              <Radio value={o.value} colorScheme="purple">
                 <Box ml={2}>
-                  <Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">{o.label}</Text>
-                  <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif">{o.note}</Text>
+                  <Text fontWeight="700" fontSize="sm" color={c.text}>{o.label}</Text>
+                  <Text fontSize="xs" color={c.subtle}>{o.note}</Text>
                 </Box>
               </Radio>
             </Box>
           ))}
         </Stack>
       </RadioGroup>
-      <Button borderRadius="full" fontFamily="'Poppins', sans-serif" alignSelf="flex-start"
+      <Button borderRadius="full" alignSelf="flex-start"
         onClick={() => toast({ title: 'Preference saved', status: 'success', duration: 2000, isClosable: true, position: 'top-right' })}>
         Save
       </Button>
@@ -379,8 +378,8 @@ function ToggleListPanel({ items, c }) {
       {items.map(item => (
         <Flex key={item.key} justify="space-between" align="center" py={4} px={2}>
           <Box flex="1" pr={4}>
-            <Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">{item.label}</Text>
-            <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif" mt={0.5}>{item.note}</Text>
+            <Text fontWeight="700" fontSize="sm" color={c.text}>{item.label}</Text>
+            <Text fontSize="xs" color={c.subtle} mt={0.5}>{item.note}</Text>
           </Box>
           <Switch isChecked={vals[item.key] ?? item.default} onChange={e => handleToggle(item.key, e.target.checked)} colorScheme="purple" size="md" />
         </Flex>
@@ -403,19 +402,19 @@ function SessionsPanel({ c }) {
           align="center" justify="space-between">
           <Box>
             <HStack spacing={2} mb={1}>
-              <Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">{s.device}</Text>
-              {s.current && <Badge colorScheme="green" borderRadius="full" fontSize="8px" fontFamily="'Poppins', sans-serif">Current</Badge>}
+              <Text fontWeight="700" fontSize="sm" color={c.text}>{s.device}</Text>
+              {s.current && <Badge colorScheme="green" borderRadius="full" fontSize="8px">Current</Badge>}
             </HStack>
-            <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif">{s.location} · {s.time}</Text>
+            <Text fontSize="xs" color={c.subtle}>{s.location} · {s.time}</Text>
           </Box>
           {!s.current && (
-            <Button size="xs" colorScheme="red" variant="outline" borderRadius="full" fontFamily="'Poppins', sans-serif">
+            <Button size="xs" colorScheme="red" variant="outline" borderRadius="full">
               Log out
             </Button>
           )}
         </Flex>
       ))}
-      <Button variant="outline" colorScheme="red" borderRadius="full" fontFamily="'Poppins', sans-serif" alignSelf="flex-start">
+      <Button variant="outline" colorScheme="red" borderRadius="full" alignSelf="flex-start">
         Log out of all other sessions
       </Button>
     </VStack>
@@ -433,21 +432,21 @@ function CrisisPanel({ c }) {
     <VStack spacing={4} align="stretch">
       <Alert status="warning" borderRadius="xl">
         <AlertIcon />
-        <AlertDescription fontFamily="'Poppins', sans-serif" fontSize="sm" fontWeight="700">
+        <AlertDescription fontSize="sm" fontWeight="700">
           If you are in immediate danger, call your local emergency services (e.g. 199, 911, or 999).
         </AlertDescription>
       </Alert>
       {LINES.map(l => (
         <Box key={l.name} p={4} bg={c.inputBg} borderRadius="xl" border="1px solid" borderColor={c.border}>
-          <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif" mb={1}>{l.country}</Text>
-          <Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">{l.name}</Text>
+          <Text fontSize="xs" color={c.subtle} mb={1}>{l.country}</Text>
+          <Text fontWeight="700" fontSize="sm" color={c.text}>{l.name}</Text>
           <HStack mt={1} justify="space-between">
-            <Text fontSize="sm" color="brand.400" fontWeight="700" fontFamily="'Poppins', sans-serif">{l.number}</Text>
-            <Badge colorScheme="green" borderRadius="full" fontFamily="'Poppins', sans-serif" fontSize="9px">{l.available}</Badge>
+            <Text fontSize="sm" color="brand.400" fontWeight="700">{l.number}</Text>
+            <Badge colorScheme="green" borderRadius="full" fontSize="9px">{l.available}</Badge>
           </HStack>
         </Box>
       ))}
-      <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif" textAlign="center">
+      <Text fontSize="xs" color={c.subtle} textAlign="center">
         Wild Diary is not a crisis service. If you need immediate help, please call one of the numbers above.
       </Text>
     </VStack>
@@ -468,11 +467,11 @@ function HelpPanel({ c }) {
       {FAQS.map(({ q, a }) => (
         <AccordionItem key={q} border="none" mb={2}>
           <AccordionButton bg={c.inputBg} borderRadius="xl" px={4} py={3} _hover={{ bg: c.hover }} _expanded={{ bg: c.d ? 'rgba(124,58,237,0.12)' : 'purple.50', borderBottomRadius: 0 }}>
-            <Box flex="1" textAlign="left" fontFamily="'Poppins', sans-serif" fontSize="sm" fontWeight="700" color={c.text}>{q}</Box>
+            <Box flex="1" textAlign="left" fontSize="sm" fontWeight="700" color={c.text}>{q}</Box>
             <AccordionIcon color={c.subtle} />
           </AccordionButton>
           <AccordionPanel bg={c.inputBg} borderBottomRadius="xl" px={4} pb={4}>
-            <Text fontSize="sm" color={c.subtle} fontFamily="'Poppins', sans-serif" lineHeight="1.7">{a}</Text>
+            <Text fontSize="sm" color={c.subtle} lineHeight="1.7">{a}</Text>
           </AccordionPanel>
         </AccordionItem>
       ))}
@@ -484,7 +483,7 @@ function PolicyPanel({ title, content, c }) {
   return (
     <Box bg={c.inputBg} borderRadius="xl" p={5} border="1px solid" borderColor={c.border}>
       <Text fontWeight="700" color={c.text} mb={3}>{title}</Text>
-      <Text fontSize="sm" color={c.subtle} fontFamily="'Poppins', sans-serif" lineHeight="1.8" whiteSpace="pre-line">
+      <Text fontSize="sm" color={c.subtle} lineHeight="1.8" whiteSpace="pre-line">
         {content}
       </Text>
     </Box>
@@ -498,9 +497,9 @@ function ReportPanel({ c }) {
   return (
     <VStack spacing={4} align="stretch">
       <FormControl>
-        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} fontWeight="700">Type of problem</FormLabel>
+        <FormLabel fontSize="sm" color={c.text} fontWeight="700">Type of problem</FormLabel>
         <Select value={type} onChange={e => setType(e.target.value)} bg={c.inputBg} border="1px solid" borderColor={c.border}
-          fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} borderRadius="lg">
+          fontSize={{ base: '16px', md: 'sm' }} color={c.text} borderRadius="lg">
           <option value="">Select a category</option>
           <option value="bug">Something is not working (Bug)</option>
           <option value="content">Harmful or inappropriate content</option>
@@ -511,13 +510,13 @@ function ReportPanel({ c }) {
         </Select>
       </FormControl>
       <FormControl>
-        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} fontWeight="700">Description</FormLabel>
+        <FormLabel fontSize="sm" color={c.text} fontWeight="700">Description</FormLabel>
         <Textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="Describe the problem in detail..."
           bg={c.inputBg} border="1px solid" borderColor={c.border} borderRadius="lg"
-          fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} rows={5} />
-        <FormHelperText fontFamily="'Poppins', sans-serif" fontSize="xs" color={c.subtle}>{desc.length}/1000</FormHelperText>
+          fontSize={{ base: '16px', md: 'sm' }} color={c.text} rows={5} />
+        <FormHelperText fontSize="xs" color={c.subtle}>{desc.length}/1000</FormHelperText>
       </FormControl>
-      <Button borderRadius="full" fontFamily="'Poppins', sans-serif" alignSelf="flex-start"
+      <Button borderRadius="full" alignSelf="flex-start"
         isDisabled={!type || !desc}
         onClick={() => { toast({ title: 'Report submitted', description: 'Our team will review it shortly. Thank you.', status: 'success', duration: 4000, isClosable: true, position: 'top-right' }); setType(''); setDesc(''); }}>
         Submit report
@@ -529,7 +528,7 @@ function ReportPanel({ c }) {
 function DarkModePanel({ c, isDark, toggleColorMode }) {
   return (
     <VStack spacing={5} align="stretch">
-      <Text fontSize="sm" color={c.subtle} fontFamily="'Poppins', sans-serif">Choose how Wild Diary looks to you. Select a single theme, or sync with your system setting.</Text>
+      <Text fontSize="sm" color={c.subtle}>Choose how Wild Diary looks to you. Select a single theme, or sync with your system setting.</Text>
       {[
         { id: 'light', label: 'Light', note: 'Classic light theme', active: !isDark },
         { id: 'dark',  label: 'Dark',  note: 'Easier on the eyes at night', active: isDark },
@@ -542,8 +541,8 @@ function DarkModePanel({ c, isDark, toggleColorMode }) {
           <HStack spacing={3}>
             {opt.id === 'dark' ? <MdDarkMode size={20} color={c.d ? '#e4e6eb' : '#050505'} /> : <MdLightMode size={20} color={c.d ? '#e4e6eb' : '#050505'} />}
             <Box>
-              <Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">{opt.label}</Text>
-              <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif">{opt.note}</Text>
+              <Text fontWeight="700" fontSize="sm" color={c.text}>{opt.label}</Text>
+              <Text fontSize="xs" color={c.subtle}>{opt.note}</Text>
             </Box>
           </HStack>
           {opt.active && <MdCheck size={20} color="#7c3aed" />}
@@ -594,15 +593,15 @@ function AiSupportPanel({ c }) {
   return (
     <VStack spacing={5} align="stretch">
       <Box p={4} bg={c.d ? 'rgba(124,58,237,0.08)' : 'purple.50'} borderRadius="xl" border="1px solid" borderColor={c.d ? 'purple.800' : 'purple.200'}>
-        <HStack mb={2}><MdPsychology size={18} color="#7c3aed" /><Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">Optional AI support</Text></HStack>
-        <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif" lineHeight="1.7">
+        <HStack mb={2}><MdPsychology size={18} color="#7c3aed" /><Text fontWeight="700" fontSize="sm" color={c.text}>Optional AI support</Text></HStack>
+        <Text fontSize="xs" color={c.subtle} lineHeight="1.7">
           AI support is off by default. When enabled, Wild Diary will still ask for your permission after every post before generating a supportive reflection. Choosing “Not now” never sends that post for AI analysis.
         </Text>
       </Box>
       <Flex p={4} bg={c.inputBg} borderRadius="xl" align="center" justify="space-between" gap={4}>
         <Box>
-          <Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">Enable AI support</Text>
-          <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif">Allow the per-post AI support option</Text>
+          <Text fontWeight="700" fontSize="sm" color={c.text}>Enable AI support</Text>
+          <Text fontSize="xs" color={c.subtle}>Allow the per-post AI support option</Text>
         </Box>
         <Switch
           colorScheme="purple"
@@ -660,11 +659,11 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
           <InputGroup>
             <InputLeftElement><MdSearch color={c.subtle} size={16} /></InputLeftElement>
             <Input placeholder="Search blocked accounts…" bg={c.inputBg} border="1px solid" borderColor={c.border}
-              borderRadius="lg" fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} pl="36px" />
+              borderRadius="lg" fontSize={{ base: '16px', md: 'sm' }} color={c.text} pl="36px" />
           </InputGroup>
           <Box py={10} textAlign="center">
             <MdBlock size={40} color={c.subtle} style={{ margin: '0 auto 8px' }} />
-            <Text fontSize="sm" color={c.subtle} fontFamily="'Poppins', sans-serif">You have not blocked any accounts yet.</Text>
+            <Text fontSize="sm" color={c.subtle}>You have not blocked any accounts yet.</Text>
           </Box>
         </VStack>
       );
@@ -704,10 +703,10 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
     case 'default-category':
       return (
         <VStack spacing={5} align="stretch">
-          <Text fontSize="sm" color={c.subtle} fontFamily="'Poppins', sans-serif">New diary entries will default to this category. You can change it per post.</Text>
+          <Text fontSize="sm" color={c.subtle}>New diary entries will default to this category. You can change it per post.</Text>
           <FormControl>
-            <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} fontWeight="700">Default category</FormLabel>
-            <Select bg={c.inputBg} border="1px solid" borderColor={c.border} fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} borderRadius="lg">
+            <FormLabel fontSize="sm" color={c.text} fontWeight="700">Default category</FormLabel>
+            <Select bg={c.inputBg} border="1px solid" borderColor={c.border} fontSize={{ base: '16px', md: 'sm' }} color={c.text} borderRadius="lg">
               <option value="emotional">💜 Emotional</option>
               <option value="financial">💰 Financial</option>
               <option value="relationship">🤝 Relationship</option>
@@ -715,7 +714,7 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
               <option value="other">📝 Other</option>
             </Select>
           </FormControl>
-          <Button borderRadius="full" fontFamily="'Poppins', sans-serif" alignSelf="flex-start">Save</Button>
+          <Button borderRadius="full" alignSelf="flex-start">Save</Button>
         </VStack>
       );
 
@@ -727,7 +726,7 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
         <VStack spacing={5} align="stretch">
           <Alert status="info" borderRadius="xl" bg={c.d ? 'rgba(59,130,246,0.08)' : 'blue.50'} border="1px solid" borderColor={c.d ? 'blue.800' : 'blue.200'}>
             <AlertIcon />
-            <AlertDescription fontFamily="'Poppins', sans-serif" fontSize="sm">When posting anonymously, no one — including counselors — can see your username.</AlertDescription>
+            <AlertDescription fontSize="sm">When posting anonymously, no one — including counselors — can see your username.</AlertDescription>
           </Alert>
           <ToggleListPanel c={c} items={[
             { key: 'anonDefault', label: 'Post anonymously by default', note: 'New posts hide your username unless you choose to reveal it', default: true },
@@ -741,10 +740,10 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
     case 'font-size':
       return (
         <VStack spacing={6} align="stretch">
-          <Text fontSize="sm" color={c.subtle} fontFamily="'Poppins', sans-serif">Adjust how large text appears across Wild Diary.</Text>
+          <Text fontSize="sm" color={c.subtle}>Adjust how large text appears across Wild Diary.</Text>
           <Box p={5} bg={c.inputBg} borderRadius="xl">
-            <Text fontSize="md" color={c.text} fontFamily="'Poppins', sans-serif" mb={1} fontWeight="600">Preview text</Text>
-            <Text fontSize="sm" color={c.subtle} fontFamily="'Poppins', sans-serif">This is how your diary entries and posts will look.</Text>
+            <Text fontSize="md" color={c.text} mb={1} fontWeight="600">Preview text</Text>
+            <Text fontSize="sm" color={c.subtle}>This is how your diary entries and posts will look.</Text>
           </Box>
           <Box px={2}>
             <Slider defaultValue={50} min={0} max={100} step={50} colorScheme="purple">
@@ -753,7 +752,7 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
             </Slider>
             <Flex justify="space-between" mt={1}>
               {['Small', 'Medium', 'Large'].map(s => (
-                <Text key={s} fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif">{s}</Text>
+                <Text key={s} fontSize="xs" color={c.subtle}>{s}</Text>
               ))}
             </Flex>
           </Box>
@@ -764,8 +763,8 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
       return (
         <VStack spacing={5} align="stretch">
           <FormControl>
-            <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} fontWeight="700">Display language</FormLabel>
-            <Select bg={c.inputBg} border="1px solid" borderColor={c.border} fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text} borderRadius="lg">
+            <FormLabel fontSize="sm" color={c.text} fontWeight="700">Display language</FormLabel>
+            <Select bg={c.inputBg} border="1px solid" borderColor={c.border} fontSize={{ base: '16px', md: 'sm' }} color={c.text} borderRadius="lg">
               <option value="en">English (UK)</option>
               <option value="en-us">English (US)</option>
               <option value="fr">Français</option>
@@ -776,7 +775,7 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
               <option value="ig">Igbo</option>
             </Select>
           </FormControl>
-          <Button borderRadius="full" fontFamily="'Poppins', sans-serif" alignSelf="flex-start">Save</Button>
+          <Button borderRadius="full" alignSelf="flex-start">Save</Button>
         </VStack>
       );
 
@@ -787,16 +786,16 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
       return (
         <VStack spacing={5} align="stretch">
           <Alert status="info" borderRadius="xl" bg={c.d ? 'rgba(59,130,246,0.08)' : 'blue.50'} border="1px solid" borderColor={c.d ? 'blue.800' : 'blue.200'}>
-            <AlertIcon /><AlertDescription fontFamily="'Poppins', sans-serif" fontSize="sm">Two-factor authentication adds an extra layer of security by requiring a code from your phone whenever you sign in.</AlertDescription>
+            <AlertIcon /><AlertDescription fontSize="sm">Two-factor authentication adds an extra layer of security by requiring a code from your phone whenever you sign in.</AlertDescription>
           </Alert>
           <ToggleListPanel c={c} items={[
             { key: '2faEnabled', label: 'Enable two-factor authentication', note: 'You will be prompted for a code on each new login', default: false },
           ]} />
           <Box p={4} bg={c.inputBg} borderRadius="xl" border="1px solid" borderColor={c.border}>
-            <Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif" mb={1}>Current status</Text>
+            <Text fontWeight="700" fontSize="sm" color={c.text} mb={1}>Current status</Text>
             <HStack>
-              <Badge colorScheme="orange" borderRadius="full" fontFamily="'Poppins', sans-serif">Not enabled</Badge>
-              <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif">Enable the toggle above to set up 2FA</Text>
+              <Badge colorScheme="orange" borderRadius="full">Not enabled</Badge>
+              <Text fontSize="xs" color={c.subtle}>Enable the toggle above to set up 2FA</Text>
             </HStack>
           </Box>
         </VStack>
@@ -816,9 +815,9 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
                 {ev.success ? <MdVerifiedUser size={18} color="#22c55e" /> : <MdWarning size={18} color="#ef4444" />}
               </Box>
               <Box flex="1">
-                <Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">{ev.time}</Text>
-                <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif">{ev.browser} · {ev.os} · {ev.location}</Text>
-                {!ev.success && <Badge colorScheme="red" borderRadius="full" fontSize="8px" mt={1} fontFamily="'Poppins', sans-serif">Failed attempt</Badge>}
+                <Text fontWeight="700" fontSize="sm" color={c.text}>{ev.time}</Text>
+                <Text fontSize="xs" color={c.subtle}>{ev.browser} · {ev.os} · {ev.location}</Text>
+                {!ev.success && <Badge colorScheme="red" borderRadius="full" fontSize="8px" mt={1}>Failed attempt</Badge>}
               </Box>
             </HStack>
           ))}
@@ -829,11 +828,11 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
       return (
         <VStack spacing={5} align="center" py={8}>
           <MdSupportAgent size={48} color="#7c3aed" />
-          <Text fontWeight="700" fontSize="lg" color={c.text} fontFamily="'Poppins', sans-serif" textAlign="center">Find a Counselor</Text>
-          <Text fontSize="sm" color={c.subtle} fontFamily="'Poppins', sans-serif" textAlign="center" maxW="320px">
+          <Text fontWeight="700" fontSize="lg" color={c.text} textAlign="center">Find a Counselor</Text>
+          <Text fontSize="sm" color={c.subtle} textAlign="center" maxW="320px">
             Browse our directory of verified mental health professionals. All counselors on Wild Diary are credentialed and background-checked.
           </Text>
-          <Button as={RouterLink} to="/feed?tab=counselors" borderRadius="full" fontFamily="'Poppins', sans-serif">
+          <Button as={RouterLink} to="/feed?tab=counselors" borderRadius="full">
             Browse Counselors
           </Button>
         </VStack>
@@ -843,11 +842,11 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
       return (
         <VStack spacing={4} align="stretch" py={8} textAlign="center">
           <MdPeople size={48} color={c.subtle} style={{ margin: '0 auto' }} />
-          <Text fontWeight="700" color={c.text} fontFamily="'Poppins', sans-serif">No connected counselors yet</Text>
-          <Text fontSize="sm" color={c.subtle} fontFamily="'Poppins', sans-serif" maxW="320px" mx="auto">
+          <Text fontWeight="700" color={c.text}>No connected counselors yet</Text>
+          <Text fontSize="sm" color={c.subtle} maxW="320px" mx="auto">
             Once a counselor responds to your diary or you connect with one, they will appear here.
           </Text>
-          <Button as={RouterLink} to="/feed?tab=counselors" variant="outline" borderRadius="full" fontFamily="'Poppins', sans-serif" alignSelf="center">
+          <Button as={RouterLink} to="/feed?tab=counselors" variant="outline" borderRadius="full" alignSelf="center">
             Find counselors
           </Button>
         </VStack>
@@ -875,7 +874,7 @@ function getDetailContent(itemId, { c, user, isDark, toggleColorMode, updateProf
       return (
         <Box py={16} textAlign="center">
           <MdSettings size={40} color={c.subtle} style={{ margin: '0 auto 12px' }} />
-          <Text color={c.subtle} fontFamily="'Poppins', sans-serif" fontSize="sm">Select an item from the list to see its settings.</Text>
+          <Text color={c.subtle} fontSize="sm">Select an item from the list to see its settings.</Text>
         </Box>
       );
   }
@@ -934,7 +933,7 @@ export default function Settings() {
           gap={1}
           sx={{ '&::-webkit-scrollbar': { width: '0px' } }}
         >
-          <Text fontWeight="900" fontSize="xl" color={c.text} fontFamily="'Poppins', sans-serif" px={2} mb={3}>
+          <Text fontWeight="900" fontSize="xl" color={c.text} px={2} mb={3}>
             Settings
           </Text>
 
@@ -946,7 +945,7 @@ export default function Settings() {
               placeholder="Search settings…"
               value={search} onChange={e => setSearch(e.target.value)}
               borderRadius="full" bg={c.inputBg} border="none"
-              fontFamily="'Poppins', sans-serif" fontSize="sm" color={c.text}
+              fontSize={{ base: '16px', md: 'sm' }} color={c.text}
               _focus={{ boxShadow: 'none' }} pl="32px"
             />
           </InputGroup>
@@ -964,14 +963,13 @@ export default function Settings() {
                 _hover={{ bg: isActive ? c.active : c.hover }}
                 onClick={() => selectSection(section.id)}
                 transition="all 0.15s"
-                fontFamily="'Poppins', sans-serif"
               >
                 <Flex w="36px" h="36px" borderRadius="full" flexShrink={0}
                   bg={isActive ? (isDark ? 'rgba(124,58,237,0.2)' : 'purple.100') : (isDark ? 'rgba(255,255,255,0.1)' : '#e4e6eb')}
                   align="center" justify="center">
                   <Icon size={18} color={isActive ? '#7c3aed' : (isDark ? '#e4e6eb' : '#65676b')} />
                 </Flex>
-                <Text fontSize="sm" fontWeight={isActive ? '700' : '600'} fontFamily="'Poppins', sans-serif">
+                <Text fontSize="sm" fontWeight={isActive ? '700' : '600'}>
                   {section.label}
                 </Text>
               </Box>
@@ -993,7 +991,7 @@ export default function Settings() {
         >
           {/* Mobile back */}
           <Box display={{ base: 'flex', md: 'none' }} p={3}>
-            <Button leftIcon={<MdArrowBack size={16} />} variant="ghost" size="sm" onClick={() => setMobileView('sections')} fontFamily="'Poppins', sans-serif">
+            <Button leftIcon={<MdArrowBack size={16} />} variant="ghost" size="sm" onClick={() => setMobileView('sections')}>
               Back
             </Button>
           </Box>
@@ -1001,10 +999,10 @@ export default function Settings() {
           {activeSection && (
             <>
               <Box px={5} pt={5} pb={3}>
-                <Text fontWeight="900" fontSize="lg" color={c.text} fontFamily="'Poppins', sans-serif" mb={1}>
+                <Text fontWeight="900" fontSize="lg" color={c.text} mb={1}>
                   {activeSection.label}
                 </Text>
-                <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif" lineHeight="1.6">
+                <Text fontSize="xs" color={c.subtle} lineHeight="1.6">
                   {activeSection.description}
                 </Text>
               </Box>
@@ -1029,10 +1027,10 @@ export default function Settings() {
                       </Flex>
                       <Box flex="1" minW={0}>
                         <Text fontWeight="700" fontSize="sm" color={item.danger ? 'red.400' : c.text}
-                          fontFamily="'Poppins', sans-serif" noOfLines={1}>
+                          noOfLines={1}>
                           {item.label}
                         </Text>
-                        <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif" noOfLines={2} lineHeight="1.5" mt={0.5}>
+                        <Text fontSize="xs" color={c.subtle} noOfLines={2} lineHeight="1.5" mt={0.5}>
                           {item.description}
                         </Text>
                       </Box>
@@ -1056,17 +1054,17 @@ export default function Settings() {
         >
           {/* Mobile back */}
           <Box display={{ base: 'flex', md: 'none' }} p={3}>
-            <Button leftIcon={<MdArrowBack size={16} />} variant="ghost" size="sm" onClick={() => setMobileView('items')} fontFamily="'Poppins', sans-serif">
+            <Button leftIcon={<MdArrowBack size={16} />} variant="ghost" size="sm" onClick={() => setMobileView('items')}>
               Back
             </Button>
           </Box>
 
           {activeItem ? (
             <Box p={6} maxW="600px">
-              <Text fontWeight="900" fontSize="lg" color={c.text} fontFamily="'Poppins', sans-serif" mb={1}>
+              <Text fontWeight="900" fontSize="lg" color={c.text} mb={1}>
                 {activeItem.label}
               </Text>
-              <Text fontSize="sm" color={c.subtle} fontFamily="'Poppins', sans-serif" mb={5} lineHeight="1.6">
+              <Text fontSize="sm" color={c.subtle} mb={5} lineHeight="1.6">
                 {activeItem.description}
               </Text>
               <Divider borderColor={c.border} mb={5} />
@@ -1075,7 +1073,7 @@ export default function Settings() {
           ) : (
             <Flex flex="1" align="center" justify="center" direction="column" gap={3} p={6}>
               <MdSettings size={48} color={c.subtle} />
-              <Text color={c.subtle} fontFamily="'Poppins', sans-serif" fontSize="sm" textAlign="center">
+              <Text color={c.subtle} fontSize="sm" textAlign="center">
                 Select a section and item from the left to view its settings.
               </Text>
             </Flex>

@@ -57,7 +57,7 @@ export default function FeedPostCard({ post, isDark }) {
       bg={cardBg} borderColor={border} borderStyle="solid"
       // Edge-to-edge on phones (Facebook app), rounded card on larger screens.
       borderWidth={{ base: '1px 0', md: '1px' }} borderRadius={{ base: 0, md: 'xl' }}
-      overflow="hidden" fontFamily="'Poppins', sans-serif"
+      overflow="hidden"
       transition="box-shadow 0.2s"
       _hover={{ boxShadow: { md: isDark ? '0 2px 16px rgba(0,0,0,0.4)' : '0 2px 16px rgba(0,0,0,0.1)' } }}
     >
@@ -66,11 +66,10 @@ export default function FeedPostCard({ post, isDark }) {
         <HStack spacing={{ base: 2.5, md: 3 }} align="flex-start" minW={0}>
           <Box position="relative" flexShrink={0}>
             <Avatar
-              size={{ base: 'sm', md: 'md' }}
+              size="md" boxSize={{ base: '40px', md: '48px' }}
               name={post.is_anonymous ? undefined : post.author_name}
               bg={isCounselor ? 'green.500' : post.is_anonymous ? 'gray.500' : 'brand.500'}
               color="white"
-              fontFamily="'Poppins', sans-serif"
             />
             {isCounselor && (
               <Box
@@ -87,22 +86,22 @@ export default function FeedPostCard({ post, isDark }) {
 
           <Box>
             <HStack spacing={1} flexWrap="wrap" align="center">
-              <Text fontWeight="700" fontSize="sm" color={textColor} fontFamily="'Poppins', sans-serif">
+              <Text fontWeight="700" fontSize="sm" color={textColor}>
                 {post.is_anonymous ? 'Anonymous' : post.author_name}
               </Text>
               {isCounselor && (
-                <Badge colorScheme="green" fontSize="8px" borderRadius="full" px={2} fontFamily="'Poppins', sans-serif">
+                <Badge colorScheme="green" fontSize="8px" borderRadius="full" px={2}>
                   Counselor
                 </Badge>
               )}
               {post.has_ai_insight && (
-                <Badge colorScheme="blue" fontSize="8px" borderRadius="full" px={2} fontFamily="'Poppins', sans-serif">
+                <Badge colorScheme="blue" fontSize="8px" borderRadius="full" px={2}>
                   AI
                 </Badge>
               )}
             </HStack>
             <HStack spacing={1} align="center">
-              <Text fontSize="xs" color={subtle} fontFamily="'Poppins', sans-serif">{timeAgo(post.created_at)}</Text>
+              <Text fontSize="xs" color={subtle}>{timeAgo(post.created_at)}</Text>
               <Text fontSize="xs" color={subtle}>·</Text>
               {post.is_anonymous
                 ? <MdLock size={12} color={subtle} />
@@ -111,7 +110,6 @@ export default function FeedPostCard({ post, isDark }) {
               <Badge
                 ml={1} fontSize="8px" borderRadius="full" textTransform="capitalize"
                 colorScheme={CATEGORY_SCHEME[post.category?.toLowerCase()] || 'gray'}
-                fontFamily="'Poppins', sans-serif"
               >
                 {post.category}
               </Badge>
@@ -129,7 +127,7 @@ export default function FeedPostCard({ post, isDark }) {
           <MenuList bg={isDark ? '#3a3b3c' : 'white'} borderColor={border} minW="180px">
             <MenuItem
               icon={<MdFlag size={16} />} color="red.400"
-              fontFamily="'Poppins', sans-serif" fontSize="sm"
+              fontSize="sm"
               _hover={{ bg: isDark ? 'whiteAlpha.100' : 'gray.50' }}
             >
               Report post
@@ -142,7 +140,7 @@ export default function FeedPostCard({ post, isDark }) {
       <Box px={{ base: 3, md: 4 }} pb={3}>
         <Text
           fontSize={{ base: '15px', md: 'sm' }} lineHeight="1.6" color={textColor}
-          whiteSpace="pre-wrap" fontFamily="'Poppins', sans-serif"
+          whiteSpace="pre-wrap"
         >
           {post.content}
         </Text>
@@ -154,13 +152,13 @@ export default function FeedPostCard({ post, isDark }) {
           <Flex justify="space-between" align="center">
             <HStack spacing={1}>
               <Text fontSize="13px" lineHeight="1">👍❤️😢</Text>
-              <Text fontSize="xs" color={subtle} fontFamily="'Poppins', sans-serif">
+              <Text fontSize="xs" color={subtle}>
                 {likeCount.toLocaleString()}
               </Text>
             </HStack>
             {(post.comments_count || 0) > 0 && (
               <Text
-                fontSize="xs" color={subtle} fontFamily="'Poppins', sans-serif"
+                fontSize="xs" color={subtle}
                 cursor="pointer" _hover={{ textDecoration: 'underline' }}
               >
                 {post.comments_count} {post.comments_count === 1 ? 'comment' : 'comments'}
@@ -176,7 +174,7 @@ export default function FeedPostCard({ post, isDark }) {
       <HStack spacing={0} px={{ base: 1, md: 2 }} py={1}>
         <Button
           flex="1" variant="ghost" size="sm" h={{ base: '40px', md: 8 }} borderRadius="xl"
-          fontFamily="'Poppins', sans-serif" fontWeight="700"
+          fontWeight="700"
           color={liked ? 'brand.500' : subtle}
           leftIcon={<MdThumbUp size={20} color={liked ? '#7c3aed' : subtle} />}
           _hover={{ bg: hoverBg }} onClick={handleLike}
@@ -186,7 +184,7 @@ export default function FeedPostCard({ post, isDark }) {
 
         <Button
           flex="1" variant="ghost" size="sm" h={{ base: '40px', md: 8 }} borderRadius="xl"
-          fontFamily="'Poppins', sans-serif" fontWeight="700" color={subtle}
+          fontWeight="700" color={subtle}
           leftIcon={<MdChat size={20} color={subtle} />}
           _hover={{ bg: hoverBg }}
           onClick={() => { if (!isDemo) navigate(`/post/${post.id}`); }}
@@ -196,7 +194,7 @@ export default function FeedPostCard({ post, isDark }) {
 
         <Button
           flex="1" variant="ghost" size="sm" h={{ base: '40px', md: 8 }} borderRadius="xl"
-          fontFamily="'Poppins', sans-serif" fontWeight="700" color={subtle}
+          fontWeight="700" color={subtle}
           leftIcon={<MdShare size={20} color={subtle} />}
           _hover={{ bg: hoverBg }}
         >

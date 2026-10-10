@@ -60,10 +60,10 @@ export default function Profile() {
   const subtleText = isDark ? 'gray.400' : 'gray.500';
 
   return (
-    <Box flex="1" maxW="4xl" mx="auto" w="100%" px={4} py={8} textAlign="left" fontFamily="'Poppins', sans-serif">
+    <Box flex="1" maxW="4xl" mx="auto" w="100%" px={4} py={8} textAlign="left">
       <Box mb={8}>
-        <Heading fontSize="3xl" fontWeight="900" fontFamily="'Poppins', sans-serif" letterSpacing="-0.5px">Your Profile</Heading>
-        <Text color={subtleText} fontSize="sm" mt={1} fontFamily="'Poppins', sans-serif">Manage your account and view your sharing stats.</Text>
+        <Heading fontSize={{ base: '2xl', md: '3xl' }} fontWeight="800" letterSpacing="-0.5px">Your Profile</Heading>
+        <Text color={subtleText} fontSize="sm" mt={1}>Manage your account and view your sharing stats.</Text>
       </Box>
 
       <Grid templateColumns="1fr" gap={6} mb={8}>
@@ -74,8 +74,8 @@ export default function Profile() {
                 <MdPerson size={32} />
               </Box>
               <Box>
-                <Heading size="md" fontFamily="'Poppins', sans-serif" textTransform="capitalize">{user?.username || 'User'}</Heading>
-                <Badge mt={1} colorScheme={isCounselor ? 'green' : 'purple'} borderRadius="full" px={3} py={0.5} fontSize="10px" fontFamily="'Poppins', sans-serif">
+                <Heading size="md" textTransform="capitalize">{user?.username || 'User'}</Heading>
+                <Badge mt={1} colorScheme={isCounselor ? 'green' : 'purple'} borderRadius="full" px={3} py={0.5} fontSize="10px">
                   {isCounselor ? '✓ Verified Counselor' : 'Community Member'}
                 </Badge>
               </Box>
@@ -84,11 +84,11 @@ export default function Profile() {
             <VStack align="flex-start" spacing={3} fontSize="sm" color={isDark ? 'gray.300' : 'gray.600'}>
               <HStack spacing={3}>
                 <MdEmail size={18} color={isDark ? '#555' : '#aaa'} />
-                <Text fontFamily="'Poppins', sans-serif">Email: <Text as="strong" color={isDark ? 'white' : 'black'}>{user?.email || 'N/A'}</Text></Text>
+                <Text>Email: <Text as="strong" color={isDark ? 'white' : 'black'}>{user?.email || 'N/A'}</Text></Text>
               </HStack>
               <HStack spacing={3}>
                 <MdVerifiedUser size={18} color={isDark ? '#555' : '#aaa'} />
-                <Text fontFamily="'Poppins', sans-serif">Role: <Text as="strong" color={isDark ? 'white' : 'black'} textTransform="capitalize">{user?.role || 'user'}</Text></Text>
+                <Text>Role: <Text as="strong" color={isDark ? 'white' : 'black'} textTransform="capitalize">{user?.role || 'user'}</Text></Text>
               </HStack>
             </VStack>
           </Box>
@@ -99,7 +99,7 @@ export default function Profile() {
       <Box>
         <HStack mb={4} spacing={2}>
           <MdDescription size={20} color={isDark ? '#555' : '#aaa'} />
-          <Heading size="md" fontFamily="'Poppins', sans-serif" fontWeight="800">Your Diary Entries ({userPosts.length})</Heading>
+          <Heading size="md" fontWeight="800">Your Diary Entries ({userPosts.length})</Heading>
         </HStack>
 
         {loadingPosts ? (
@@ -110,7 +110,7 @@ export default function Profile() {
           <Flex direction="column" align="center" justify="center" py={10}
             border="2px dashed" borderColor={borderColor} borderRadius="2xl" textAlign="center">
             <MdOutlineEditNote size={40} opacity={0.3} />
-            <Text color={subtleText} fontSize="sm" mt={3} fontFamily="'Poppins', sans-serif">
+            <Text color={subtleText} fontSize="sm" mt={3}>
               You haven't written any diary entries yet. Go to the{' '}
               <Link as={RouterLink} to="/feed" color="brand.500" fontWeight="700">Feed</Link> and share your thoughts.
             </Text>
@@ -124,7 +124,7 @@ export default function Profile() {
                   _hover={{ borderColor: isDark ? 'whiteAlpha.300' : 'gray.400' }} transition="border-color 0.2s" textDecoration="none">
                   <HStack justify="space-between" mb={2}>
                     <HStack spacing={2}>
-                      <Text fontSize="xs" color={subtleText} fontFamily="'Poppins', sans-serif">
+                      <Text fontSize="xs" color={subtleText}>
                         {new Date(post.created_at).toLocaleDateString()}
                       </Text>
                       {post.status === 'under_review' && (
@@ -135,14 +135,14 @@ export default function Profile() {
                       )}
                     </HStack>
                     <HStack spacing={2}>
-                      <Badge colorScheme="purple" borderRadius="md" fontSize="9px" fontFamily="'Poppins', sans-serif" textTransform="capitalize">
+                      <Badge colorScheme="purple" borderRadius="md" fontSize="9px" textTransform="capitalize">
                         {post.category}
                       </Badge>
                       <Tooltip label="Delete post" hasArrow>
                         <IconButton
                           aria-label="Delete post"
                           icon={<MdDeleteOutline size={16} />}
-                          size="xs"
+                          size="sm"
                           variant="ghost"
                           colorScheme="red"
                           onClick={(e) => handleDeletePost(e, post.id)}
@@ -150,14 +150,14 @@ export default function Profile() {
                       </Tooltip>
                     </HStack>
                   </HStack>
-                  <Text fontSize="sm" color={isDark ? 'gray.300' : 'gray.700'} noOfLines={3} lineHeight="1.6" fontFamily="'Poppins', sans-serif">
+                  <Text fontSize="sm" color={isDark ? 'gray.300' : 'gray.700'} noOfLines={3} lineHeight="1.6">
                     {post.content}
                   </Text>
-                  <HStack mt={3} pt={2} borderTop="1px solid" borderColor={borderColor} fontSize="xs" color={subtleText} spacing={3} fontFamily="'Poppins', sans-serif">
+                  <HStack mt={3} pt={2} borderTop="1px solid" borderColor={borderColor} fontSize="xs" color={subtleText} spacing={3}>
                     <Text>👍 {post.reactions_count || 0} supports</Text>
                     <Text>•</Text>
                     <Text>💬 {post.comments_count || 0} replies</Text>
-                    <Badge ml="auto" fontSize="9px" colorScheme={post.is_anonymous ? 'gray' : 'purple'} borderRadius="sm" fontFamily="'Poppins', sans-serif">
+                    <Badge ml="auto" fontSize="9px" colorScheme={post.is_anonymous ? 'gray' : 'purple'} borderRadius="sm">
                       {post.is_anonymous ? 'Anonymous' : 'Public'}
                     </Badge>
                   </HStack>

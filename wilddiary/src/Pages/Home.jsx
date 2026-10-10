@@ -82,7 +82,6 @@ function AuthPanel() {
         as="h6"
         fontSize="md"
         fontWeight="700"
-        fontFamily="'Poppins', sans-serif"
         mb={6}
         lineHeight="1.3"
         textAlign="center"
@@ -97,7 +96,7 @@ function AuthPanel() {
           <>
             {/* Name row */}
             <FormControl>
-              <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif" color="black">Name</FormLabel>
+              <FormLabel fontSize="sm" color="black">Name</FormLabel>
               <HStack>
                 <Input
                   name="firstName"
@@ -106,7 +105,6 @@ function AuthPanel() {
                   onChange={handleChange}
                   required
                   size="lg"
-                  fontFamily="'Poppins', sans-serif"
                 />
                 <Input
                   name="surname"
@@ -115,32 +113,31 @@ function AuthPanel() {
                   onChange={handleChange}
                   required
                   size="lg"
-                  fontFamily="'Poppins', sans-serif"
                 />
               </HStack>
             </FormControl>
 
             {/* Date of birth */}
             <FormControl>
-              <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif" color="black">Date of birth</FormLabel>
+              <FormLabel fontSize="sm" color="black">Date of birth</FormLabel>
               <HStack>
                 <Select
                   name="dobDay" placeholder="Day" value={formData.dobDay}
-                  onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                  onChange={handleChange} size="lg"
                   borderColor={borderColor} sx={selectSx}
                 >
                   {days.map(d => <option key={d} value={d}>{d}</option>)}
                 </Select>
                 <Select
                   name="dobMonth" placeholder="Month" value={formData.dobMonth}
-                  onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                  onChange={handleChange} size="lg"
                   borderColor={borderColor} sx={selectSx}
                 >
                   {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                 </Select>
                 <Select
                   name="dobYear" placeholder="Year" value={formData.dobYear}
-                  onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                  onChange={handleChange} size="lg"
                   borderColor={borderColor} sx={selectSx}
                 >
                   {years.map(y => <option key={y} value={y}>{y}</option>)}
@@ -150,10 +147,10 @@ function AuthPanel() {
 
             {/* Gender */}
             <FormControl>
-              <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif" color="black">Gender</FormLabel>
+              <FormLabel fontSize="sm" color="black">Gender</FormLabel>
               <Select
                 name="gender" placeholder="Select your gender" value={formData.gender}
-                onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                onChange={handleChange} size="lg"
                 borderColor={borderColor} sx={selectSx}
               >
                 <option value="female">Female</option>
@@ -167,7 +164,7 @@ function AuthPanel() {
 
         {/* Email */}
         <FormControl>
-          <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif" color="black">
+          <FormLabel fontSize="sm" color="black">
             {isRegister ? 'Mobile number or email address' : 'Email address'}
           </FormLabel>
           <InputGroup>
@@ -183,14 +180,13 @@ function AuthPanel() {
               required
               size="lg"
               pl="42px"
-              fontFamily="'Poppins', sans-serif"
             />
           </InputGroup>
         </FormControl>
 
         {/* Password */}
         <FormControl>
-          <FormLabel fontSize="sm" fontFamily="'Poppins', sans-serif" color="black">Password</FormLabel>
+          <FormLabel fontSize="sm" color="black">Password</FormLabel>
           <InputGroup>
             <InputLeftElement pointerEvents="none" h="full">
               <MdLock size={18} color={iconColor} />
@@ -205,7 +201,6 @@ function AuthPanel() {
               size="lg"
               pl="42px"
               pr="48px"
-              fontFamily="'Poppins', sans-serif"
             />
             <InputRightElement h="full">
               <IconButton
@@ -227,7 +222,6 @@ function AuthPanel() {
           isLoading={loading}
           loadingText="Please wait…"
           w="100%"
-          fontFamily="'Poppins', sans-serif"
           fontWeight="700"
           fontSize="md"
           borderRadius="full"
@@ -237,13 +231,13 @@ function AuthPanel() {
         </Button>
 
         {/* Switch mode link */}
-        <Text fontSize="sm" color={subtleText} textAlign="center" fontFamily="'Poppins', sans-serif">
+        <Text fontSize="sm" color={subtleText} textAlign="center">
           {isRegister ? (
             <>
               I already have an account.{' '}
               <Link as="button" type="button" color="brand.500" fontWeight="700"
                 _hover={{ textDecoration: 'underline' }} onClick={() => switchMode(false)}
-                fontFamily="'Poppins', sans-serif">
+               >
                 Sign in
               </Link>
             </>
@@ -252,7 +246,7 @@ function AuthPanel() {
               Don&apos;t have an account?{' '}
               <Link as="button" type="button" color="brand.500" fontWeight="700"
                 _hover={{ textDecoration: 'underline' }} onClick={() => switchMode(true)}
-                fontFamily="'Poppins', sans-serif">
+               >
                 Create an account
               </Link>
             </>
@@ -261,7 +255,7 @@ function AuthPanel() {
       </VStack>
 
       {isRegister && (
-        <Text fontSize="xs" color={subtleText} mt={6} lineHeight="1.6" fontFamily="'Poppins', sans-serif">
+        <Text fontSize="xs" color={subtleText} mt={6} lineHeight="1.6">
           By tapping Submit, you agree to our{' '}
           <Link href="#" color={subtleText} textDecoration="underline">Terms</Link>,{' '}
           <Link href="#" color={subtleText} textDecoration="underline">Privacy Policy</Link> and{' '}
@@ -282,18 +276,18 @@ function AuthenticatedHome({ user }) {
       px={6} py={16} bg={isDark ? 'black' : 'white'} position="relative">
       <VStack spacing={4} textAlign="center" maxW="500px">
         <Image src="/app-logo.jpg" alt="Logo" boxSize="96px" borderRadius="full" objectFit="cover" />
-        <Heading fontSize={{ base: '3xl', md: '4xl' }} fontWeight="900" fontFamily="'Poppins', sans-serif" lineHeight="1.1">
+        <Heading fontSize={{ base: '3xl', md: '4xl' }} fontWeight="900" lineHeight="1.1">
           Welcome back,{' '}
           <Box as="span" color="brand.500" textTransform="capitalize">{user?.username}</Box>
         </Heading>
-        <Text color="gray.500" fontFamily="'Poppins', sans-serif">
+        <Text color="gray.500">
           Your safe space is ready. Pick up where you left off.
         </Text>
         <HStack spacing={4} pt={2}>
-          <Button as={RouterLink} to="/feed" size="lg" borderRadius="full" fontFamily="'Poppins', sans-serif" fontWeight="700">
+          <Button as={RouterLink} to="/feed" size="lg" borderRadius="full" fontWeight="700">
             Go to Feed
           </Button>
-          <Button as={RouterLink} to="/create" size="lg" variant="outline" borderRadius="full" fontFamily="'Poppins', sans-serif" fontWeight="600">
+          <Button as={RouterLink} to="/create" size="lg" variant="outline" borderRadius="full" fontWeight="600">
             Write New Entry
           </Button>
         </HStack>
@@ -334,7 +328,6 @@ function UnauthenticatedHome() {
             zIndex={2}
             fontSize="36px"
             fontWeight="800"
-            fontFamily="'Poppins', sans-serif"
             lineHeight="1.18"
             color="black"
             letterSpacing="-0.8px"

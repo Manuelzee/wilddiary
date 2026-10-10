@@ -116,7 +116,7 @@ export default function CreatePost() {
   const borderColor = isDark ? 'whiteAlpha.100' : 'gray.200';
 
   return (
-    <Box flex="1" maxW="2xl" mx="auto" w="100%" px={4} py={8} textAlign="left" fontFamily="'Poppins', sans-serif">
+    <Box flex="1" maxW="2xl" mx="auto" w="100%" px={4} py={8} textAlign="left">
       {/* Back */}
       <Button
         as={RouterLink}
@@ -126,7 +126,6 @@ export default function CreatePost() {
         mb={6}
         leftIcon={<MdArrowBack size={18} />}
         borderRadius="full"
-        fontFamily="'Poppins', sans-serif"
         fontWeight="600"
       >
         Back to Feed
@@ -139,8 +138,8 @@ export default function CreatePost() {
             <MdEditNote size={28} />
           </Box>
           <Box>
-            <Heading size="md" fontFamily="'Poppins', sans-serif" fontWeight="800">Write a Diary Post</Heading>
-            <Text fontSize="xs" color={isDark ? 'gray.400' : 'gray.500'} fontFamily="'Poppins', sans-serif">
+            <Heading size="md" fontWeight="800">Write a Diary Post</Heading>
+            <Text fontSize="xs" color={isDark ? 'gray.400' : 'gray.500'}>
               Pour out what is on your mind. You are in a safe, supportive place.
             </Text>
           </Box>
@@ -149,14 +148,14 @@ export default function CreatePost() {
         {safetyWarning && (
           <Alert status="warning" borderRadius="xl" mb={4}>
             <AlertIcon />
-            <AlertDescription fontSize="sm" fontFamily="'Poppins', sans-serif">{safetyWarning}</AlertDescription>
+            <AlertDescription fontSize="sm">{safetyWarning}</AlertDescription>
           </Alert>
         )}
 
         <Box as="form" onSubmit={handleSubmit}>
           <VStack spacing={5} align="stretch">
             <FormControl>
-              <FormLabel fontFamily="'Poppins', sans-serif" fontWeight="600" fontSize="sm">
+              <FormLabel fontWeight="600" fontSize="sm">
                 Your Struggle / Thoughts
               </FormLabel>
               <Textarea
@@ -167,20 +166,18 @@ export default function CreatePost() {
                 value={content}
                 onChange={handleContentChange}
                 resize="vertical"
-                fontFamily="'Poppins', sans-serif"
-                fontSize="sm"
+                fontSize={{ base: '16px', md: 'sm' }}
                 borderRadius="xl"
               />
             </FormControl>
 
             <HStack spacing={4} align="flex-start" flexWrap="wrap">
               <FormControl flex="1" minW="180px">
-                <FormLabel fontFamily="'Poppins', sans-serif" fontWeight="600" fontSize="sm">Tag Category</FormLabel>
+                <FormLabel fontWeight="600" fontSize="sm">Tag Category</FormLabel>
                 <Select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  fontFamily="'Poppins', sans-serif"
-                  fontSize="sm"
+                  fontSize={{ base: '16px', md: 'sm' }}
                   borderRadius="xl"
                   sx={{ '& option': { bg: isDark ? '#000' : '#fff' } }}
                 >
@@ -193,7 +190,7 @@ export default function CreatePost() {
               </FormControl>
 
               <FormControl flex="1" minW="180px">
-                <FormLabel fontFamily="'Poppins', sans-serif" fontWeight="600" fontSize="sm">Privacy Setting</FormLabel>
+                <FormLabel fontWeight="600" fontSize="sm">Privacy Setting</FormLabel>
                 <HStack
                   p={3}
                   bg={isDark ? 'whiteAlpha.50' : 'gray.100'}
@@ -211,10 +208,10 @@ export default function CreatePost() {
                     size="sm"
                   />
                   <Box textAlign="left">
-                    <Text fontSize="xs" fontWeight="700" fontFamily="'Poppins', sans-serif">
+                    <Text fontSize="xs" fontWeight="700">
                       Post Anonymously
                     </Text>
-                    <Text fontSize="10px" color={isDark ? 'gray.500' : 'gray.400'} fontFamily="'Poppins', sans-serif">
+                    <Text fontSize="10px" color={isDark ? 'gray.500' : 'gray.400'}>
                       Your profile handle will be hidden.
                     </Text>
                   </Box>
@@ -230,7 +227,6 @@ export default function CreatePost() {
                 isDisabled={!content.trim()}
                 rightIcon={<MdSend size={16} />}
                 borderRadius="full"
-                fontFamily="'Poppins', sans-serif"
                 fontWeight="700"
               >
                 Publish Diary
@@ -243,12 +239,12 @@ export default function CreatePost() {
       <Modal isOpen={Boolean(publishedPost)} onClose={declineAiSupport} isCentered closeOnOverlayClick={!requestingAi}>
         <ModalOverlay />
         <ModalContent mx={4} borderRadius="2xl">
-          <ModalHeader fontFamily="'Poppins', sans-serif">
+          <ModalHeader>
             <HStack><MdPsychology color="#7c3aed" /><Text>Would you like AI support?</Text></HStack>
           </ModalHeader>
           <ModalCloseButton isDisabled={requestingAi} />
           <ModalBody>
-            <Text fontSize="sm" lineHeight="1.7" color={isDark ? 'gray.300' : 'gray.600'} fontFamily="'Poppins', sans-serif">
+            <Text fontSize="sm" lineHeight="1.7" color={isDark ? 'gray.300' : 'gray.600'}>
               Wild Diary can generate a private, supportive reflection for this post. This is optional and is not medical advice.
               {!aiSupportEnabled && ' Choosing AI support will also enable this option in Settings; you will still be asked after every post.'}
             </Text>
@@ -260,9 +256,9 @@ export default function CreatePost() {
             )}
           </ModalBody>
           <ModalFooter gap={3}>
-            <Button variant="ghost" onClick={declineAiSupport} isDisabled={requestingAi} fontFamily="'Poppins', sans-serif">Not now</Button>
+            <Button variant="ghost" onClick={declineAiSupport} isDisabled={requestingAi}>Not now</Button>
             <Button leftIcon={<MdPsychology />} onClick={acceptAiSupport} isLoading={requestingAi}
-              loadingText="Preparing support…" isDisabled={publishedPost?.moderated} fontFamily="'Poppins', sans-serif">
+              loadingText="Preparing support…" isDisabled={publishedPost?.moderated}>
               {aiSupportEnabled ? 'Get AI support' : 'Enable & get support'}
             </Button>
           </ModalFooter>

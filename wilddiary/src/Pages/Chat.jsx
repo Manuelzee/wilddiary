@@ -109,7 +109,7 @@ export default function Chat() {
   if (!isAuthenticated) return null;
 
   return (
-    <Flex h={{ base: 'calc(100dvh - 56px - 60px)', md: 'calc(100dvh - 56px)' }} bg={bg} overflow="hidden" fontFamily="'Poppins', sans-serif">
+    <Flex h={{ base: 'calc(100dvh - 56px - 60px)', md: 'calc(100dvh - 56px)' }} bg={bg} overflow="hidden">
       <Box w={{ base: '100%', md: '300px' }} display={{ base: mobileChat ? 'none' : 'block', md: 'block' }}
         bg={panel} borderRight="1px solid" borderColor={border} p={3} overflowY="auto">
         <Button leftIcon={<MdAdd />} w="100%" variant="brand" mb={4} onClick={newConversation}>New conversation</Button>

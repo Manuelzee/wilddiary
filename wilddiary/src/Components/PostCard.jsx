@@ -66,7 +66,6 @@ export default function PostCard({ post }) {
       p={6} border="1px solid" borderColor={borderColor} borderRadius="2xl" bg={cardBg}
       textAlign="left" transition="border-color 0.2s, background 0.2s"
       _hover={{ borderColor: isCounselor ? (isDark ? 'green.600' : 'green.400') : (isDark ? 'whiteAlpha.300' : 'gray.300') }}
-      fontFamily="'Poppins', sans-serif"
     >
       {/* Header */}
       <Flex justify="space-between" align="flex-start">
@@ -81,14 +80,14 @@ export default function PostCard({ post }) {
           <Box>
             <HStack spacing={2}>
               <Text fontWeight="700" fontSize="sm">{post.author_name}</Text>
-              {isCounselor && <Badge colorScheme="green" borderRadius="full" fontSize="9px" fontFamily="'Poppins', sans-serif">✓ Counselor</Badge>}
+              {isCounselor && <Badge colorScheme="green" borderRadius="full" fontSize="9px">✓ Counselor</Badge>}
             </HStack>
-            <Text fontSize="xs" color={isDark ? 'gray.500' : 'gray.400'} fontFamily="'Poppins', sans-serif">
+            <Text fontSize="xs" color={isDark ? 'gray.500' : 'gray.400'}>
               {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </Text>
           </Box>
         </HStack>
-        <Badge colorScheme={catColor.scheme} borderRadius="md" fontSize="xs" fontFamily="'Poppins', sans-serif" textTransform="capitalize">
+        <Badge colorScheme={catColor.scheme} borderRadius="md" fontSize="xs" textTransform="capitalize">
           {post.category}
         </Badge>
       </Flex>
@@ -98,11 +97,11 @@ export default function PostCard({ post }) {
         {isUnderReview && (
           <Alert status="warning" borderRadius="xl" mb={3} fontSize="sm">
             <AlertIcon />
-            <AlertDescription fontFamily="'Poppins', sans-serif">
+            <AlertDescription>
               <Text fontWeight="700" fontSize="xs">Content Under Moderation Review</Text>
               <Text fontSize="xs" color={isDark ? 'gray.400' : 'gray.600'}>This post has been reported and is under safety review.</Text>
               {!revealBlurred && (
-                <Button variant="link" size="xs" color="orange.400" fontFamily="'Poppins', sans-serif"
+                <Button variant="link" size="xs" color="orange.400"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRevealBlurred(true); }}>
                   Reveal content anyway
                 </Button>
@@ -112,7 +111,7 @@ export default function PostCard({ post }) {
         )}
         <Text
           fontSize="15px" lineHeight="1.7" whiteSpace="pre-wrap"
-          color={isDark ? 'gray.300' : 'gray.700'} fontFamily="'Poppins', sans-serif"
+          color={isDark ? 'gray.300' : 'gray.700'}
           filter={isUnderReview && !revealBlurred ? 'blur(4px)' : 'none'}
           userSelect={isUnderReview && !revealBlurred ? 'none' : 'auto'}
           pointerEvents={isUnderReview && !revealBlurred ? 'none' : 'auto'}
@@ -129,21 +128,21 @@ export default function PostCard({ post }) {
         <HStack spacing={5}>
           <Box as="button" onClick={handleLike} display="flex" alignItems="center" gap="6px"
             fontWeight={liked ? '700' : '500'} color={liked ? 'brand.500' : undefined}
-            bg="none" border="none" cursor="pointer" fontFamily="'Poppins', sans-serif"
+            bg="none" border="none" cursor="pointer"
             _hover={{ color: 'brand.400' }} transition="color 0.2s, transform 0.15s" _active={{ transform: 'scale(0.95)' }}>
             {liked ? <MdFavorite size={18} color="#7c3aed" /> : <MdFavoriteBorder size={18} />}
             <Text as="span">{likeCount} {liked ? 'Supported' : 'Support'}</Text>
           </Box>
 
           <Box as={RouterLink} to={`/post/${post.id}`} display="flex" alignItems="center" gap="6px"
-            textDecoration="none" color={isDark ? 'gray.400' : 'gray.500'} fontFamily="'Poppins', sans-serif"
+            textDecoration="none" color={isDark ? 'gray.400' : 'gray.500'}
             _hover={{ color: 'brand.400' }} transition="color 0.2s" onClick={(e) => e.stopPropagation()}>
             <MdChatBubbleOutline size={18} />
             <Text as="span">{post.comments_count || 0} Comments</Text>
           </Box>
 
           {post.has_ai_insight && (
-            <Badge colorScheme="blue" borderRadius="md" fontSize="10px" display="flex" alignItems="center" gap="4px" fontFamily="'Poppins', sans-serif">
+            <Badge colorScheme="blue" borderRadius="md" fontSize="10px" display="flex" alignItems="center" gap="4px">
               <MdTipsAndUpdates size={12} /> AI Response
             </Badge>
           )}
@@ -153,7 +152,7 @@ export default function PostCard({ post }) {
           <Box as="button" onClick={handleReport} display="flex" alignItems="center" gap="4px"
             fontSize="xs" fontWeight="600" bg="none" border="none"
             cursor={reporting ? 'not-allowed' : 'pointer'} opacity={reporting ? 0.5 : 1}
-            color={isDark ? 'gray.500' : 'gray.400'} fontFamily="'Poppins', sans-serif"
+            color={isDark ? 'gray.500' : 'gray.400'}
             _hover={{ color: 'red.400' }} transition="color 0.2s">
             <MdOutlineFlag size={15} />
             <Text as="span">Report</Text>

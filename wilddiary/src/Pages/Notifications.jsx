@@ -35,10 +35,10 @@ export default function Notifications() {
   };
 
   return (
-    <Box maxW="3xl" mx="auto" w="100%" py={10} px={4} fontFamily="'Poppins', sans-serif">
+    <Box maxW="3xl" mx="auto" w="100%" py={10} px={4}>
       <Flex justify="space-between" align="center" mb={7} flexWrap="wrap" gap={3}>
         <Box>
-          <Heading fontSize="3xl" fontWeight="900">Notifications</Heading>
+          <Heading fontSize={{ base: '2xl', md: '3xl' }} fontWeight="800">Notifications</Heading>
           <Text color="gray.500" mt={1}>Support, responses, and account updates.</Text>
         </Box>
         <Button variant="outline" borderRadius="full" size="sm" onClick={markRead}>

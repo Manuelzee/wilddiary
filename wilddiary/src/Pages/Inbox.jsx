@@ -86,7 +86,7 @@ export default function Inbox() {
   const activePosts = posts.filter(p => (p.comments_count > 0 || p.reactions_count > 0));
 
   return (
-    <Box maxW="4xl" mx="auto" w="100%" py={{ base: 4, md: 8 }} px={{ base: 3, md: 6 }} fontFamily="'Poppins', sans-serif">
+    <Box maxW="4xl" mx="auto" w="100%" py={{ base: 4, md: 8 }} px={{ base: 3, md: 6 }}>
       {/* ── Page Header ── */}
       <Flex justify="space-between" align={{ base: 'flex-start', sm: 'center' }} mb={6} flexWrap="wrap" gap={3}>
         <Box>

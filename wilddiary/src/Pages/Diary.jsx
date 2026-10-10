@@ -24,11 +24,15 @@ export default function Diary() {
   }, [isAuthenticated, navigate, toast]);
 
   return (
-    <Box w="100%" maxW="6xl" mx="auto" py={{ base: 6, md: 10 }}>
-      <Flex justify="space-between" align="start" gap={4} mb={8}>
-        <Box><Badge colorScheme="purple" mb={2}><MdLock style={{ display: 'inline' }} /> Private to you</Badge><Heading>My Diary</Heading><Text color="gray.500" mt={2}>A quiet place to write, notice patterns, and reflect.</Text></Box>
-        <Button as={RouterLink} to="/diary/new" leftIcon={<MdAdd />} variant="brand">New entry</Button>
-      </Flex>
+    <Box w="100%" maxW="6xl" mx="auto" py={{ base: 4, md: 10 }}>
+      <Box mb={{ base: 5, md: 8 }}>
+        <Badge colorScheme="purple" mb={2} display="inline-flex" alignItems="center" gap={1}><MdLock /> Private to you</Badge>
+        <Flex justify="space-between" align="center" gap={3}>
+          <Heading size="xl" minW={0}>My Diary</Heading>
+          <Button as={RouterLink} to="/diary/new" leftIcon={<MdAdd size={18} />} variant="brand" size="sm">New entry</Button>
+        </Flex>
+        <Text color="gray.500" mt={2} fontSize={{ base: 'sm', md: 'md' }}>A quiet place to write, notice patterns, and reflect.</Text>
+      </Box>
       {loading ? <Flex justify="center" py={20}><Spinner /></Flex> : entries.length === 0 ? (
         <VStack border="2px dashed" borderColor={isDark ? 'whiteAlpha.200' : 'gray.200'} borderRadius="2xl" py={16} spacing={4}>
           <MdMenuBook size={44} opacity={0.35} /><Heading size="md">Your private pages begin here</Heading>

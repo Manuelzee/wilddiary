@@ -35,7 +35,6 @@ export default class ErrorBoundary extends Component {
           p={6}
           bg="#18191a"
           color="white"
-          fontFamily="'Poppins', sans-serif"
         >
           <Box
             maxW="480px"

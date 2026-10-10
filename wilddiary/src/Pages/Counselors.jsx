@@ -18,9 +18,9 @@ export default function Counselors() {
   }, []);
 
   return (
-    <Box maxW="6xl" mx="auto" w="100%" py={10} px={4} fontFamily="'Poppins', sans-serif">
+    <Box maxW="6xl" mx="auto" w="100%" py={10} px={4}>
       <Badge colorScheme="green" mb={2}>Professional support</Badge>
-      <Heading mt={2} fontSize="3xl" fontWeight="900">Verified counselors</Heading>
+      <Heading mt={2} fontSize={{ base: '2xl', md: '3xl' }} fontWeight="800">Verified counselors</Heading>
       <Text color="gray.500" mt={2} mb={8}>
         Browse professionals verified by the Wild Diary team. Profiles are distinct from community accounts.
       </Text>

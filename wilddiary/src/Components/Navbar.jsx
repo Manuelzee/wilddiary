@@ -136,7 +136,6 @@ export default function Navbar() {
                 fontWeight="800"
                 fontSize="lg"
                 letterSpacing="-0.4px"
-                fontFamily="'Poppins', sans-serif"
                 color={isDark ? 'white' : 'black'}
               >
                 Wild Diary
@@ -293,7 +292,6 @@ export default function Navbar() {
                 size="sm"
                 borderRadius="full"
                 variant="brand"
-                fontFamily="'Poppins', sans-serif"
                 fontWeight="700"
                 px={5}
               >
@@ -377,7 +375,7 @@ export default function Navbar() {
           ════════════════════════════════════════════════════════════════════════ */}
       <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="sm">
         <DrawerOverlay bg="blackAlpha.600" backdropFilter="blur(3px)" />
-        <DrawerContent bg={drawerBg} color={mainText} fontFamily="'Poppins', sans-serif">
+        <DrawerContent bg={drawerBg} color={mainText}>
           <DrawerCloseButton mt={2} />
           <DrawerHeader borderBottom="1px solid" borderColor={border} pb={4} pt={5}>
             <Text fontSize="lg" fontWeight="800">

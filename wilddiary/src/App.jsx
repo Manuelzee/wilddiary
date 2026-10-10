@@ -32,7 +32,7 @@ function AppLayout() {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <Flex minH="100dvh" align="center" justify="center" fontFamily="'Poppins', sans-serif">Restoring your session…</Flex>;
+    return <Flex minH="100dvh" align="center" justify="center">Restoring your session…</Flex>;
   }
 
   // Unauthenticated homepage and auth page get full-bleed — no Navbar/footer wrapping
@@ -106,10 +106,10 @@ function AppLayout() {
           color="gray.500"
         >
           <Flex maxW="5xl" mx="auto" align="center" justify="space-between" flexWrap="wrap" gap={2}>
-            <Box fontFamily="'Poppins', sans-serif">
+            <Box>
               © {new Date().getFullYear()} Wild Diary. A safe social harbor.
             </Box>
-            <Flex gap={4} fontFamily="'Poppins', sans-serif">
+            <Flex gap={4}>
               <Box as="a" href="/safety" _hover={{ color: 'brand.400' }} transition="color 0.2s">
                 Safety Center
               </Box>
@@ -138,7 +138,7 @@ function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <Flex flex="1" align="center" justify="center" fontFamily="'Poppins', sans-serif">Restoring your session…</Flex>;
+    return <Flex flex="1" align="center" justify="center">Restoring your session…</Flex>;
   }
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace state={{ from: location }} />;

@@ -229,7 +229,6 @@ export default function Auth() {
             fontWeight="800"
             fontSize="md"
             letterSpacing="-0.3px"
-            fontFamily="'Poppins', sans-serif"
             color="black"
           >
             Wild Diary
@@ -275,7 +274,6 @@ export default function Auth() {
               fontWeight="800"
               fontSize="lg"
               letterSpacing="-0.3px"
-              fontFamily="'Poppins', sans-serif"
               color="black"
             >
               Wild Diary
@@ -305,7 +303,6 @@ export default function Auth() {
             zIndex={2}
             fontSize="36px"
             fontWeight="800"
-            fontFamily="'Poppins', sans-serif"
             lineHeight="1.18"
             color="black"
             letterSpacing="-0.8px"
@@ -354,7 +351,6 @@ export default function Auth() {
                   as="h6"
                   fontSize="md"
                   fontWeight="700"
-                  fontFamily="'Poppins', sans-serif"
                   lineHeight="1.3"
                   color="black"
                 >
@@ -377,7 +373,7 @@ export default function Auth() {
               >
                 <VStack spacing={4} align="stretch">
                   <FormControl isRequired>
-                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
+                    <FormLabel fontSize="sm" mb={1} color="gray.700">
                       Email address
                     </FormLabel>
                     <Input
@@ -387,7 +383,6 @@ export default function Auth() {
                       onChange={(e) => setResetEmail(e.target.value)}
                       required
                       size="lg"
-                      fontFamily="'Poppins', sans-serif"
                       bg="gray.50"
                       border="1px solid"
                       borderColor="gray.300"
@@ -408,7 +403,6 @@ export default function Auth() {
                     isLoading={loading}
                     loadingText="Sending OTP…"
                     w="100%"
-                    fontFamily="'Poppins', sans-serif"
                     fontWeight="700"
                     fontSize="md"
                     borderRadius="lg"
@@ -430,7 +424,6 @@ export default function Auth() {
                     onClick={() => setMode('login')}
                     size="lg"
                     w="100%"
-                    fontFamily="'Poppins', sans-serif"
                     fontWeight="700"
                     fontSize="md"
                     borderRadius="lg"
@@ -462,7 +455,6 @@ export default function Auth() {
                   as="h6"
                   fontSize="md"
                   fontWeight="700"
-                  fontFamily="'Poppins', sans-serif"
                   lineHeight="1.3"
                   color="black"
                 >
@@ -486,11 +478,11 @@ export default function Auth() {
                 <VStack spacing={4} align="stretch">
                   <FormControl isRequired>
                     <Flex justify="space-between" align="center" mb={1}>
-                      <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color="gray.700" mb={0}>
+                      <FormLabel fontSize="sm" color="gray.700" mb={0}>
                         6-Digit Verification Code
                       </FormLabel>
                       {resendCooldown > 0 ? (
-                        <Text fontSize="xs" color="gray.500" fontFamily="'Poppins', sans-serif">
+                        <Text fontSize="xs" color="gray.500">
                           Resend in {resendCooldown}s
                         </Text>
                       ) : (
@@ -534,7 +526,7 @@ export default function Auth() {
                   </FormControl>
 
                   <FormControl isRequired>
-                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
+                    <FormLabel fontSize="sm" mb={1} color="gray.700">
                       New Password
                     </FormLabel>
                     <InputGroup>
@@ -546,7 +538,6 @@ export default function Auth() {
                         required
                         size="lg"
                         pr="48px"
-                        fontFamily="'Poppins', sans-serif"
                         bg="gray.50"
                         border="1px solid"
                         borderColor="gray.300"
@@ -572,7 +563,7 @@ export default function Auth() {
                   </FormControl>
 
                   <FormControl isRequired>
-                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
+                    <FormLabel fontSize="sm" mb={1} color="gray.700">
                       Confirm New Password
                     </FormLabel>
                     <InputGroup>
@@ -584,7 +575,6 @@ export default function Auth() {
                         required
                         size="lg"
                         pr="48px"
-                        fontFamily="'Poppins', sans-serif"
                         bg="gray.50"
                         border="1px solid"
                         borderColor="gray.300"
@@ -615,7 +605,6 @@ export default function Auth() {
                     isLoading={loading}
                     loadingText="Updating password…"
                     w="100%"
-                    fontFamily="'Poppins', sans-serif"
                     fontWeight="700"
                     fontSize="md"
                     borderRadius="lg"
@@ -637,7 +626,6 @@ export default function Auth() {
                     onClick={() => setMode('login')}
                     size="lg"
                     w="100%"
-                    fontFamily="'Poppins', sans-serif"
                     fontWeight="700"
                     fontSize="md"
                     borderRadius="lg"
@@ -661,7 +649,6 @@ export default function Auth() {
                 as="h6"
                 fontSize="md"
                 fontWeight="700"
-                fontFamily="'Poppins', sans-serif"
                 lineHeight="1.3"
                 textAlign={{ base: 'center', md: 'left' }}
                 color="black"
@@ -687,15 +674,15 @@ export default function Auth() {
                     <>
                       {/* Name */}
                       <FormControl>
-                        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color="gray.700">Name</FormLabel>
+                        <FormLabel fontSize="sm" color="gray.700">Name</FormLabel>
                         <HStack>
                           <Input name="firstName" placeholder="First name" value={formData.firstName}
-                            onChange={handleChange} required size="lg" fontFamily="'Poppins', sans-serif"
+                            onChange={handleChange} required size="lg"
                             bg="gray.50" borderColor="gray.300" borderRadius="lg" color="black"
                             _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px #7c3aed', bg: 'white' }}
                             _hover={{ borderColor: 'gray.400' }} />
                           <Input name="surname" placeholder="Surname" value={formData.surname}
-                            onChange={handleChange} required size="lg" fontFamily="'Poppins', sans-serif"
+                            onChange={handleChange} required size="lg"
                             bg="gray.50" borderColor="gray.300" borderRadius="lg" color="black"
                             _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px #7c3aed', bg: 'white' }}
                             _hover={{ borderColor: 'gray.400' }} />
@@ -704,20 +691,20 @@ export default function Auth() {
 
                       {/* Date of birth */}
                       <FormControl>
-                        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color="gray.700">Date of birth</FormLabel>
+                        <FormLabel fontSize="sm" color="gray.700">Date of birth</FormLabel>
                         <HStack>
                           <Select name="dobDay" placeholder="Day" value={formData.dobDay}
-                            onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                            onChange={handleChange} size="lg"
                             borderColor={borderColor} sx={selectSx}>
                             {days.map(d => <option key={d} value={d}>{d}</option>)}
                           </Select>
                           <Select name="dobMonth" placeholder="Month" value={formData.dobMonth}
-                            onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                            onChange={handleChange} size="lg"
                             borderColor={borderColor} sx={selectSx}>
                             {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                           </Select>
                           <Select name="dobYear" placeholder="Year" value={formData.dobYear}
-                            onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                            onChange={handleChange} size="lg"
                             borderColor={borderColor} sx={selectSx}>
                             {years.map(y => <option key={y} value={y}>{y}</option>)}
                           </Select>
@@ -726,9 +713,9 @@ export default function Auth() {
 
                       {/* Gender */}
                       <FormControl>
-                        <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" color="gray.700">Gender</FormLabel>
+                        <FormLabel fontSize="sm" color="gray.700">Gender</FormLabel>
                         <Select name="gender" placeholder="Select your gender" value={formData.gender}
-                          onChange={handleChange} size="lg" fontFamily="'Poppins', sans-serif"
+                          onChange={handleChange} size="lg"
                           borderColor={borderColor} sx={selectSx}>
                           <option value="female">Female</option>
                           <option value="male">Male</option>
@@ -741,7 +728,7 @@ export default function Auth() {
 
                   {/* Email */}
                   <FormControl>
-                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
+                    <FormLabel fontSize="sm" mb={1} color="gray.700">
                       {isRegister ? 'Mobile number or email address' : 'Email address'}
                     </FormLabel>
                     <Input
@@ -752,7 +739,6 @@ export default function Auth() {
                       onChange={handleChange}
                       required
                       size="lg"
-                      fontFamily="'Poppins', sans-serif"
                       bg="gray.50"
                       border="1px solid"
                       borderColor="gray.300"
@@ -769,7 +755,7 @@ export default function Auth() {
 
                   {/* Password */}
                   <FormControl>
-                    <FormLabel fontFamily="'Poppins', sans-serif" fontSize="sm" mb={1} color="gray.700">
+                    <FormLabel fontSize="sm" mb={1} color="gray.700">
                       Password
                     </FormLabel>
                     <InputGroup>
@@ -782,7 +768,6 @@ export default function Auth() {
                         required
                         size="lg"
                         pr="48px"
-                        fontFamily="'Poppins', sans-serif"
                         bg="gray.50"
                         border="1px solid"
                         borderColor="gray.300"
@@ -809,7 +794,6 @@ export default function Auth() {
                     isLoading={loading}
                     loadingText="Please wait…"
                     w="100%"
-                    fontFamily="'Poppins', sans-serif"
                     fontWeight="700"
                     fontSize="md"
                     borderRadius="lg"
@@ -830,7 +814,6 @@ export default function Auth() {
                       size="sm"
                       color="brand.500"
                       fontWeight="600"
-                      fontFamily="'Poppins', sans-serif"
                       textAlign="center"
                       onClick={openForgotPassword}
                       _hover={{ textDecoration: 'underline' }}
@@ -851,7 +834,6 @@ export default function Auth() {
                     onClick={() => switchMode(!isRegister)}
                     size="lg"
                     w="100%"
-                    fontFamily="'Poppins', sans-serif"
                     fontWeight="700"
                     fontSize="md"
                     borderRadius="lg"
@@ -871,7 +853,7 @@ export default function Auth() {
               </Box>
 
               {isRegister && (
-                <Text fontSize="xs" color={subtleText} mt={6} lineHeight="1.6" fontFamily="'Poppins', sans-serif" textAlign="center">
+                <Text fontSize="xs" color={subtleText} mt={6} lineHeight="1.6" textAlign="center">
                   By tapping Sign Up, you agree to our{' '}
                   <Link href="#" color={subtleText} textDecoration="underline">Terms</Link>,{' '}
                   <Link href="#" color={subtleText} textDecoration="underline">Privacy Policy</Link> and{' '}

@@ -47,9 +47,9 @@ export default function Insights() {
   const disclaimer = data?.disclaimer || 'A gentle overview of themes and patterns you have recorded.';
 
   return (
-    <Box maxW="5xl" mx="auto" w="100%" py={10} px={4} fontFamily="'Poppins', sans-serif">
+    <Box maxW="5xl" mx="auto" w="100%" py={10} px={4}>
       <Badge colorScheme="purple" mb={2}>Private insights</Badge>
-      <Heading mt={2} fontSize="3xl" fontWeight="900">Your reflection patterns</Heading>
+      <Heading mt={2} fontSize={{ base: '2xl', md: '3xl' }} fontWeight="800">Your reflection patterns</Heading>
       <Text color="gray.500" mt={2} mb={7}>A gentle overview of themes you chose to record.</Text>
 
       <Alert status="info" borderRadius="xl" mb={6}>

@@ -102,7 +102,7 @@ function SidebarNavItem({ icon, label, href, onClick, hoverBg, iconBg, text }) {
       <Flex w="36px" h="36px" borderRadius="full" bg={iconBg} align="center" justify="center" flexShrink={0}>
         <Box as={icon} boxSize="18px" />
       </Flex>
-      <Text fontSize="sm" fontWeight="600" fontFamily="'Poppins', sans-serif" color={text}>{label}</Text>
+      <Text fontSize="sm" fontWeight="600" color={text}>{label}</Text>
     </Box>
   );
 }
@@ -154,8 +154,8 @@ function LeftSidebar({ user, isDark }) {
         _hover={{ bg: hoverBg, textDecoration: 'none' }}
         mb={1}
       >
-        <Avatar size="sm" name={user?.username} bg="brand.500" color="white" fontFamily="'Poppins', sans-serif" />
-        <Text fontSize="sm" fontWeight="700" textTransform="capitalize" fontFamily="'Poppins', sans-serif" color={text}>
+        <Avatar size="sm" name={user?.username} bg="brand.500" color="white" />
+        <Text fontSize="sm" fontWeight="700" textTransform="capitalize" color={text}>
           {user?.username}
         </Text>
       </Box>
@@ -170,8 +170,7 @@ function LeftSidebar({ user, isDark }) {
           borderRadius="full"
           bg={isDark ? 'rgba(255,255,255,0.08)' : '#e4e6eb'}
           border="none"
-          fontFamily="'Poppins', sans-serif"
-          fontSize="sm"
+          fontSize={{ base: '16px', md: 'sm' }}
           _focus={{ boxShadow: 'none', bg: isDark ? 'rgba(255,255,255,0.12)' : '#d8dadf' }}
           pl="30px"
           color={text}
@@ -195,7 +194,7 @@ function LeftSidebar({ user, isDark }) {
 
       <Divider borderColor={isDark ? 'rgba(255,255,255,0.08)' : 'gray.200'} my={2} />
 
-      <Text fontSize="xs" color={isDark ? 'gray.600' : 'gray.400'} px={2} fontFamily="'Poppins', sans-serif">
+      <Text fontSize="xs" color={isDark ? 'gray.600' : 'gray.400'} px={2}>
         Wild Diary © {new Date().getFullYear()}
       </Text>
     </Box>
@@ -245,15 +244,15 @@ function RightSidebar({ isDark }) {
       {/* ── Verified Counselors ── */}
       <Box>
         <HStack justify="space-between" mb={3}>
-          <Text fontWeight="800" fontSize="sm" color={text} fontFamily="'Poppins', sans-serif">
+          <Text fontWeight="800" fontSize="sm" color={text}>
             Support Counselors
           </Text>
-          <Button as={RouterLink} to="/counselors" size="xs" variant="ghost" color="brand.500" fontFamily="'Poppins', sans-serif" fontWeight="700">
+          <Button as={RouterLink} to="/counselors" size="xs" variant="ghost" color="brand.500" fontWeight="700">
             See all
           </Button>
         </HStack>
         {counselors.length === 0 ? (
-          <Text fontSize="xs" color={subtle} fontFamily="'Poppins', sans-serif">
+          <Text fontSize="xs" color={subtle}>
             No counselors listed yet. Directory verification is in progress.
           </Text>
         ) : (
@@ -267,10 +266,10 @@ function RightSidebar({ isDark }) {
                 <Avatar size="sm" name={c.username} bg="green.500" color="white" />
                 <Box flex="1" minW={0}>
                   <HStack spacing={1}>
-                    <Text fontSize="sm" fontWeight="700" color={text} fontFamily="'Poppins', sans-serif" noOfLines={1}>{c.username}</Text>
-                    <Badge colorScheme="green" fontSize="7px" borderRadius="full" px={1} fontFamily="'Poppins', sans-serif">Pro</Badge>
+                    <Text fontSize="sm" fontWeight="700" color={text} noOfLines={1}>{c.username}</Text>
+                    <Badge colorScheme="green" fontSize="7px" borderRadius="full" px={1}>Pro</Badge>
                   </HStack>
-                  <Text fontSize="xs" color={subtle} fontFamily="'Poppins', sans-serif" noOfLines={1}>{c.expertise || 'General Wellbeing'}</Text>
+                  <Text fontSize="xs" color={subtle} noOfLines={1}>{c.expertise || 'General Wellbeing'}</Text>
                 </Box>
               </HStack>
             ))}
@@ -283,17 +282,17 @@ function RightSidebar({ isDark }) {
       {/* ── Recent Notifications ── */}
       <Box>
         <HStack justify="space-between" mb={2}>
-          <Text fontWeight="800" fontSize="sm" color={text} fontFamily="'Poppins', sans-serif">
+          <Text fontWeight="800" fontSize="sm" color={text}>
             Recent Activity
           </Text>
           {unreadCount > 0 && (
-            <Badge colorScheme="purple" borderRadius="full" fontSize="10px" fontFamily="'Poppins', sans-serif">
+            <Badge colorScheme="purple" borderRadius="full" fontSize="10px">
               {unreadCount} new
             </Badge>
           )}
         </HStack>
         {notifications.length === 0 ? (
-          <Text fontSize="xs" color={subtle} fontFamily="'Poppins', sans-serif">
+          <Text fontSize="xs" color={subtle}>
             No new activity. When members support your entries, updates appear here.
           </Text>
         ) : (
@@ -307,10 +306,10 @@ function RightSidebar({ isDark }) {
               >
                 <Box w="7px" h="7px" borderRadius="full" bg={!n.is_read ? 'brand.500' : 'transparent'} flexShrink={0} mt="2px" />
                 <Box flex="1">
-                  <Text fontSize="xs" fontWeight={!n.is_read ? '700' : '500'} color={text} fontFamily="'Poppins', sans-serif" lineHeight="1.4">
+                  <Text fontSize="xs" fontWeight={!n.is_read ? '700' : '500'} color={text} lineHeight="1.4">
                     {n.message}
                   </Text>
-                  <Text fontSize="xs" color={subtle} fontFamily="'Poppins', sans-serif">{new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                  <Text fontSize="xs" color={subtle}>{new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
                 </Box>
               </HStack>
             ))}
@@ -322,10 +321,10 @@ function RightSidebar({ isDark }) {
 
       {/* ── Community Guidelines & Crisis Help ── */}
       <Box p={3} borderRadius="xl" bg={isDark ? 'whiteAlpha.50' : 'gray.50'} border="1px solid" borderColor={border}>
-        <Text fontSize="xs" fontWeight="700" color={text} fontFamily="'Poppins', sans-serif" mb={1}>
+        <Text fontSize="xs" fontWeight="700" color={text} mb={1}>
           Need Immediate Help?
         </Text>
-        <Text fontSize="xs" color={subtle} fontFamily="'Poppins', sans-serif" mb={2}>
+        <Text fontSize="xs" color={subtle} mb={2}>
           Wild Diary is a peer harbor, not emergency care. If you are in crisis, call emergency services (112 in Nigeria).
         </Text>
         <Button as={RouterLink} to="/safety" size="xs" variant="outline" colorScheme="purple" w="100%" borderRadius="full">
@@ -346,7 +345,7 @@ function RightSidebar({ isDark }) {
         <Flex w="36px" h="36px" borderRadius="full" bg={isDark ? 'rgba(255,255,255,0.1)' : '#e4e6eb'} align="center" justify="center">
           <MdAccountCircle size={20} color={isDark ? '#e4e6eb' : '#65676b'} />
         </Flex>
-        <Text fontSize="sm" fontWeight="700" color={text} fontFamily="'Poppins', sans-serif">
+        <Text fontSize="sm" fontWeight="700" color={text}>
           My Account
         </Text>
       </Box>
@@ -368,7 +367,7 @@ function CreatePostBox({ user, isDark }) {
       p={{ base: 3, md: 4 }} mb={{ base: 2, md: 3 }}
     >
       <HStack mb={{ base: 0, md: 3 }} spacing={2}>
-        <Avatar size="sm" name={user?.username} bg="brand.500" color="white" fontFamily="'Poppins', sans-serif" flexShrink={0} />
+        <Avatar size="sm" name={user?.username} bg="brand.500" color="white" flexShrink={0} />
         <Box
           as={RouterLink} to="/create"
           flex="1" minW={0} px={4} py="9px"
@@ -377,7 +376,7 @@ function CreatePostBox({ user, isDark }) {
           _hover={{ bg: isDark ? 'rgba(255,255,255,0.1)' : '#e4e6eb', textDecoration: 'none' }}
           transition="background 0.15s"
         >
-          <Text fontSize="sm" color={subtle} fontFamily="'Poppins', sans-serif" noOfLines={1}>
+          <Text fontSize="sm" color={subtle} noOfLines={1}>
             What's on your mind<Box as="span" display={{ base: 'none', md: 'inline' }}>, {user?.username}</Box>?
           </Text>
         </Box>
@@ -403,7 +402,6 @@ function CreatePostBox({ user, isDark }) {
             leftIcon={btn.icon}
             variant="ghost"
             size="sm"
-            fontFamily="'Poppins', sans-serif"
             fontWeight="700"
             color={subtle}
             borderRadius="xl"
@@ -479,7 +477,7 @@ export default function Feed() {
                     key={tab.value} as="button" type="button" role="tab" aria-selected={active}
                     flex="1" h="48px" position="relative"
                     onClick={() => setSort(tab.value)}
-                    fontFamily="'Poppins', sans-serif" fontSize="sm"
+                    fontSize="sm"
                     fontWeight={active ? '800' : '600'}
                     color={active ? text : subtle}
                     _active={{ bg: hoverBg }}
@@ -506,8 +504,7 @@ export default function Feed() {
                   borderRadius="full"
                   bg={isDark ? 'rgba(255,255,255,0.06)' : 'gray.50'}
                   borderColor={border}
-                  fontFamily="'Poppins', sans-serif"
-                  fontSize="xs"
+                  fontSize={{ base: '16px', md: 'xs' }}
                 />
                 {searchQuery && (
                   <Button
@@ -525,12 +522,12 @@ export default function Feed() {
               </InputGroup>
             </Box>
             <Flex display={{ base: 'none', md: 'flex' }} justify="space-between" align="center" mb={2} flexWrap="wrap" gap={2}>
-              <Text fontWeight="800" fontSize="sm" color={text} fontFamily="'Poppins', sans-serif">
+              <Text fontWeight="800" fontSize="sm" color={text}>
                 Diary Posts
               </Text>
               <HStack spacing={2}>
                 <Button
-                  size="xs" borderRadius="full" fontFamily="'Poppins', sans-serif"
+                  size="xs" borderRadius="full"
                   variant={sort === 'latest' ? 'solid' : 'ghost'}
                   onClick={() => setSort('latest')}
                   leftIcon={<MdSchedule size={12} />}
@@ -538,7 +535,7 @@ export default function Feed() {
                   Latest
                 </Button>
                 <Button
-                  size="xs" borderRadius="full" fontFamily="'Poppins', sans-serif"
+                  size="xs" borderRadius="full"
                   variant={sort === 'popular' ? 'solid' : 'ghost'}
                   onClick={() => setSort('popular')}
                   leftIcon={<MdTrendingUp size={12} />}
@@ -558,7 +555,6 @@ export default function Feed() {
                   <Button
                     as={RouterLink} to="/create"
                     size="xs" borderRadius="full"
-                    fontFamily="'Poppins', sans-serif"
                     leftIcon={<MdEditNote size={14} />}
                   >
                     Write
@@ -575,7 +571,7 @@ export default function Feed() {
               {CATS.map(cat => (
                 <Button
                   key={cat.value} flexShrink={0}
-                  size={{ base: 'sm', md: 'xs' }} borderRadius="full" fontFamily="'Poppins', sans-serif"
+                  size="sm" borderRadius="full"
                   variant={category === cat.value ? 'solid' : 'ghost'}
                   bg={category === cat.value ? 'brand.500' : { base: isDark ? 'whiteAlpha.100' : 'gray.100', md: 'transparent' }}
                   color={category === cat.value ? 'white' : undefined}
@@ -592,7 +588,7 @@ export default function Feed() {
           {!isAuthenticated && (
             <Alert status="info" borderRadius={{ base: 0, md: 'xl' }} mb={{ base: 2, md: 3 }} bg={isDark ? 'rgba(59,130,246,0.08)' : 'blue.50'} borderWidth={{ base: '1px 0', md: '1px' }} borderColor={isDark ? 'blue.800' : 'blue.200'}>
               <AlertIcon />
-              <AlertDescription fontSize="sm" fontFamily="'Poppins', sans-serif">
+              <AlertDescription fontSize="sm">
                 <Text fontWeight="700" fontSize="sm">Viewing as Guest</Text>
                 <Text fontSize="xs" color={subtle}>
                   <Box as={RouterLink} to="/auth" color="brand.500" fontWeight="700">Sign in</Box> to post, comment, and support others.
@@ -605,7 +601,7 @@ export default function Feed() {
           {isDemoShowing && !error && (
             <Alert status="info" borderRadius={{ base: 0, md: 'xl' }} mb={{ base: 2, md: 3 }} bg={isDark ? 'rgba(124,58,237,0.08)' : 'purple.50'} borderWidth={{ base: '1px 0', md: '1px' }} borderColor={isDark ? 'purple.800' : 'purple.200'}>
               <AlertIcon />
-              <AlertDescription fontSize="xs" fontFamily="'Poppins', sans-serif" color={subtle}>
+              <AlertDescription fontSize="xs" color={subtle}>
                 Showing demo posts — be the first to share a real diary entry!
               </AlertDescription>
             </Alert>
@@ -615,7 +611,7 @@ export default function Feed() {
           {error && (
             <Alert status="error" borderRadius={{ base: 0, md: 'xl' }} mb={{ base: 2, md: 3 }}>
               <AlertIcon />
-              <AlertDescription fontSize="sm" fontFamily="'Poppins', sans-serif">{error}</AlertDescription>
+              <AlertDescription fontSize="sm">{error}</AlertDescription>
             </Alert>
           )}
 
@@ -623,7 +619,7 @@ export default function Feed() {
           {loading && posts.length === 0 && (
             <Flex align="center" justify="center" py={14} direction="column" gap={3}>
               <Spinner size="lg" color="brand.500" thickness="3px" />
-              <Text color={subtle} fontFamily="'Poppins', sans-serif" fontSize="sm">Loading posts…</Text>
+              <Text color={subtle} fontSize="sm">Loading posts…</Text>
             </Flex>
           )}
 
