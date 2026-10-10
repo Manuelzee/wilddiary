@@ -7,7 +7,7 @@ import {
   Box, Flex, VStack, HStack, Heading, Text, Button, Textarea,
   FormControl, Badge, Switch, Spinner, Link,
 } from '@chakra-ui/react';
-import { MdArrowBack, MdPerson, MdChatBubbleOutline, MdSend, MdAutoAwesome, MdDeleteOutline, MdFlag } from 'react-icons/md';
+import { MdArrowBack, MdPerson, MdChatBubbleOutline, MdSend, MdTipsAndUpdates, MdDeleteOutline, MdFlag } from 'react-icons/md';
 import { BsShieldExclamation } from 'react-icons/bs';
 
 const TOXIC_WORDS = ["kill yourself", "kys", "hate you", "stupid", "idiot", "retard", "moron", "trash", "die", "suicide", "ugly"];
@@ -205,7 +205,7 @@ export default function PostDetail() {
           borderRadius="2xl" position="relative" overflow="hidden">
           <Box position="absolute" right={0} top={0} w={24} h={24} bg={isDark ? 'blue.500' : 'blue.100'} opacity={0.15} filter="blur(40px)" pointerEvents="none" />
           <HStack mb={3} color="blue.400" fontWeight="700" fontFamily="'Poppins', sans-serif">
-            <MdAutoAwesome size={20} />
+            <MdTipsAndUpdates size={20} />
             <Text fontFamily="'Poppins', sans-serif">Supportive AI Advisor</Text>
           </HStack>
           {aiInsight ? (
@@ -219,7 +219,7 @@ export default function PostDetail() {
               </Text>
               {isAuthenticated ? (
                 <Button onClick={handleRequestAiInsight} isLoading={fetchingAi} loadingText="Generating…"
-                  size="sm" colorScheme="blue" borderRadius="full" leftIcon={<MdAutoAwesome size={14} />}
+                  size="sm" colorScheme="blue" borderRadius="full" leftIcon={<MdTipsAndUpdates size={14} />}
                   fontFamily="'Poppins', sans-serif" fontWeight="700">
                   Get AI Insight
                 </Button>

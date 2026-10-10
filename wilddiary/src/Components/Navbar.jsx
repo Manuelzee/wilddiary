@@ -10,7 +10,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import {
-  MdHome, MdMenuBook, MdInbox, MdNotifications, MdChat,
+  MdHome, MdMenuBook, MdInbox, MdNotifications, MdPsychology,
   MdMenu, MdInsights, MdSupportAgent, MdHealthAndSafety,
   MdAccountCircle, MdSettings, MdAdminPanelSettings, MdLogout,
   MdDarkMode, MdLightMode,
@@ -22,7 +22,7 @@ const CORE_TABS = [
   { icon: MdMenuBook, label: 'Private diary', shortLabel: 'Diary', key: 'diary', href: '/diary' },
   { icon: MdInbox, label: 'Inbox', shortLabel: 'Inbox', key: 'inbox', href: '/inbox' },
   { icon: MdNotifications, label: 'Notifications', shortLabel: 'Alerts', key: 'notifications', href: '/notifications', hasBadge: true },
-  { icon: MdChat, label: 'Messenger', shortLabel: 'Messenger', key: 'chat', href: '/chat' },
+  { icon: MdPsychology, label: 'AI Support', shortLabel: 'AI Support', key: 'chat', href: '/chat' },
 ];
 
 export default function Navbar() {

@@ -13,7 +13,7 @@ import {
   MdExpandMore, MdExpandLess, MdSearch,
   MdPersonAdd, MdNotifications, MdAccountCircle,
   MdPhoto, MdVideoCameraBack, MdEmojiEmotions, MdRefresh, MdEditNote,
-  MdChat, MdAutoAwesome,
+  MdChat, MdPsychology, MdSchedule, MdTrendingUp,
 } from 'react-icons/md';
 import FeedPostCard from '../Components/FeedPostCard';
 import { discoveryService } from '../Services/discoveryService';
@@ -118,7 +118,7 @@ function LeftSidebar({ user, isDark }) {
   const MENU = [
     { icon: MdMenuBook, label: 'Private Diary', href: '/diary' },
     { icon: MdInsights, label: 'My Insights', href: '/insights' },
-    { icon: MdAutoAwesome, label: 'AI Support', href: '/chat' },
+    { icon: MdPsychology, label: 'AI Support', href: '/chat' },
     { icon: MdSupportAgent, label: 'Counselors', href: '/counselors' },
     { icon: MdHealthAndSafety, label: 'Safety Center', href: '/safety' },
   ];
@@ -492,7 +492,7 @@ export default function Feed() {
                   size="xs" borderRadius="full" fontFamily="'Poppins', sans-serif"
                   variant={sort === 'latest' ? 'solid' : 'ghost'}
                   onClick={() => setSort('latest')}
-                  leftIcon={<MdAutoAwesome size={12} />}
+                  leftIcon={<MdSchedule size={12} />}
                 >
                   Latest
                 </Button>
@@ -500,6 +500,7 @@ export default function Feed() {
                   size="xs" borderRadius="full" fontFamily="'Poppins', sans-serif"
                   variant={sort === 'popular' ? 'solid' : 'ghost'}
                   onClick={() => setSort('popular')}
+                  leftIcon={<MdTrendingUp size={12} />}
                 >
                   Top
                 </Button>

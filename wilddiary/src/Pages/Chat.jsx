@@ -5,7 +5,7 @@ import {
   Alert, AlertIcon, Avatar, Box, Button, Flex, HStack, IconButton, Spinner,
   Text, Textarea, Tooltip, VStack, useToast,
 } from '@chakra-ui/react';
-import { MdAdd, MdArrowBack, MdAutoAwesome, MdDeleteOutline, MdSend } from 'react-icons/md';
+import { MdAdd, MdArrowBack, MdPsychology, MdDeleteOutline, MdSend } from 'react-icons/md';
 import { useAuth } from '../Context/useAuth';
 import { apiRequest } from '../Services/api';
 
@@ -132,7 +132,7 @@ export default function Chat() {
       <Flex flex="1" display={{ base: mobileChat ? 'flex' : 'none', md: 'flex' }} direction="column" minW={0}>
         <HStack bg={panel} borderBottom="1px solid" borderColor={border} p={3} spacing={3}>
           <IconButton display={{ base: 'inline-flex', md: 'none' }} aria-label="Back to conversations" icon={<MdArrowBack />} variant="ghost" onClick={() => setMobileChat(false)} />
-          <Avatar size="sm" bg="brand.500" icon={<MdAutoAwesome color="white" />} />
+          <Avatar size="sm" bg="brand.500" icon={<MdPsychology color="white" />} />
           <Box><Text fontWeight="800" fontSize="sm">Harbor</Text><Text fontSize="xs" color={muted}>Supportive AI companion</Text></Box>
         </HStack>
         <Alert status="info" py={2} fontSize="xs"><AlertIcon />Harbor can make mistakes and does not replace professional or emergency care. Chats are saved to your account.</Alert>

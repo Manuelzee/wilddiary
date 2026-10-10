@@ -10,7 +10,7 @@ import {
   AlertDescription, Divider, useToast, Modal, ModalOverlay, ModalContent,
   ModalHeader, ModalBody, ModalFooter, ModalCloseButton,
 } from '@chakra-ui/react';
-import { MdArrowBack, MdEditNote, MdSend, MdWarningAmber, MdAutoAwesome } from 'react-icons/md';
+import { MdArrowBack, MdEditNote, MdSend, MdWarningAmber, MdPsychology } from 'react-icons/md';
 
 export default function CreatePost() {
   const { createPost, getAiInsight } = usePosts();
@@ -244,7 +244,7 @@ export default function CreatePost() {
         <ModalOverlay />
         <ModalContent mx={4} borderRadius="2xl">
           <ModalHeader fontFamily="'Poppins', sans-serif">
-            <HStack><MdAutoAwesome color="#7c3aed" /><Text>Would you like AI support?</Text></HStack>
+            <HStack><MdPsychology color="#7c3aed" /><Text>Would you like AI support?</Text></HStack>
           </ModalHeader>
           <ModalCloseButton isDisabled={requestingAi} />
           <ModalBody>
@@ -261,7 +261,7 @@ export default function CreatePost() {
           </ModalBody>
           <ModalFooter gap={3}>
             <Button variant="ghost" onClick={declineAiSupport} isDisabled={requestingAi} fontFamily="'Poppins', sans-serif">Not now</Button>
-            <Button leftIcon={<MdAutoAwesome />} onClick={acceptAiSupport} isLoading={requestingAi}
+            <Button leftIcon={<MdPsychology />} onClick={acceptAiSupport} isLoading={requestingAi}
               loadingText="Preparing support…" isDisabled={publishedPost?.moderated} fontFamily="'Poppins', sans-serif">
               {aiSupportEnabled ? 'Get AI support' : 'Enable & get support'}
             </Button>

@@ -8,7 +8,7 @@ import {
   Box, Flex, VStack, HStack, Grid, GridItem, Heading, Text,
   Badge, Divider, Link,
 } from '@chakra-ui/react';
-import { MdPerson, MdVerifiedUser, MdEmail, MdDescription, MdAutoAwesome, MdDeleteOutline } from 'react-icons/md';
+import { MdPerson, MdVerifiedUser, MdEmail, MdDescription, MdOutlineEditNote, MdDeleteOutline } from 'react-icons/md';
 
 export default function Profile() {
   const { user, isAuthenticated } = useAuth();
@@ -109,7 +109,7 @@ export default function Profile() {
         ) : userPosts.length === 0 ? (
           <Flex direction="column" align="center" justify="center" py={10}
             border="2px dashed" borderColor={borderColor} borderRadius="2xl" textAlign="center">
-            <MdAutoAwesome size={40} opacity={0.3} />
+            <MdOutlineEditNote size={40} opacity={0.3} />
             <Text color={subtleText} fontSize="sm" mt={3} fontFamily="'Poppins', sans-serif">
               You haven't written any diary entries yet. Go to the{' '}
               <Link as={RouterLink} to="/feed" color="brand.500" fontWeight="700">Feed</Link> and share your thoughts.

@@ -7,7 +7,7 @@ import {
   Box, Flex, HStack, Text, Badge, Button, Alert,
   AlertIcon, AlertDescription,
 } from '@chakra-ui/react';
-import { MdFavoriteBorder, MdFavorite, MdChatBubbleOutline, MdOutlineFlag, MdAutoAwesome, MdPerson } from 'react-icons/md';
+import { MdFavoriteBorder, MdFavorite, MdChatBubbleOutline, MdOutlineFlag, MdTipsAndUpdates, MdPerson } from 'react-icons/md';
 import { BsShieldExclamation } from 'react-icons/bs';
 
 const CATEGORY_COLORS = {
@@ -144,7 +144,7 @@ export default function PostCard({ post }) {
 
           {post.has_ai_insight && (
             <Badge colorScheme="blue" borderRadius="md" fontSize="10px" display="flex" alignItems="center" gap="4px" fontFamily="'Poppins', sans-serif">
-              <MdAutoAwesome size={12} /> AI Response
+              <MdTipsAndUpdates size={12} /> AI Response
             </Badge>
           )}
         </HStack>

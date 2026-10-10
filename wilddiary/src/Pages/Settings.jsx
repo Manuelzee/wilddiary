@@ -13,7 +13,7 @@ import {
 } from '@chakra-ui/react';
 import {
   MdAccountCircle, MdPerson, MdLock, MdWarning, MdSecurity, MdVisibility,
-  MdBlock, MdNotifications, MdEmail, MdFavorite, MdSupportAgent, MdAutoAwesome,
+  MdBlock, MdNotifications, MdEmail, MdFavorite, MdSupportAgent, MdPsychology,
   MdDarkMode, MdLightMode, MdLanguage, MdDevices, MdVerifiedUser, MdHistory,
   MdLocalHospital, MdPeople, MdHelp, MdGavel, MdDescription, MdBugReport,
   MdChevronRight, MdArrowBack, MdSearch, MdEdit, MdSave, MdKey, MdShield,
@@ -58,7 +58,7 @@ const SECTIONS = [
     description: 'Customise how your diary works and how your entries are displayed.',
     items: [
       { id: 'default-category',  label: 'Default post category',          description: 'Set the default category for new diary entries',                          icon: MdCategory    },
-      { id: 'ai-insights',       label: 'AI support',                       description: 'Control optional AI support for your posts',                              icon: MdAutoAwesome },
+      { id: 'ai-insights',       label: 'AI support',                       description: 'Control optional AI support for your posts',                              icon: MdPsychology },
       { id: 'anonymous-default', label: 'Post anonymously by default',     description: 'New posts will use an anonymous identity unless you override it per post', icon: MdVisibility  },
     ],
   },
@@ -594,7 +594,7 @@ function AiSupportPanel({ c }) {
   return (
     <VStack spacing={5} align="stretch">
       <Box p={4} bg={c.d ? 'rgba(124,58,237,0.08)' : 'purple.50'} borderRadius="xl" border="1px solid" borderColor={c.d ? 'purple.800' : 'purple.200'}>
-        <HStack mb={2}><MdAutoAwesome size={18} color="#7c3aed" /><Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">Optional AI support</Text></HStack>
+        <HStack mb={2}><MdPsychology size={18} color="#7c3aed" /><Text fontWeight="700" fontSize="sm" color={c.text} fontFamily="'Poppins', sans-serif">Optional AI support</Text></HStack>
         <Text fontSize="xs" color={c.subtle} fontFamily="'Poppins', sans-serif" lineHeight="1.7">
           AI support is off by default. When enabled, Wild Diary will still ask for your permission after every post before generating a supportive reflection. Choosing “Not now” never sends that post for AI analysis.
         </Text>
