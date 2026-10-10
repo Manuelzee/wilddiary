@@ -27,6 +27,28 @@ DEFAULT_DB = BASE_DIR / "wilddiary.db"
 _PG_SCHEMES = ("postgres://", "postgresql+psycopg://", "postgresql+psycopg2://")
 
 
+def _normalise_credentials(url):
+    """Percent-encode the user/password and drop a leftover "[YOUR-PASSWORD]" bracket pair.
+
+    Supabase's copy-paste template wraps the password in brackets, and passwords
+    containing "@", ":" or "/" must be encoded or the host is parsed wrongly.
+    """
+    from urllib.parse import quote, unquote
+    scheme, sep, rest = url.partition("://")
+    authority_end = rest.find("/", rest.rfind("@") + 1)
+    authority = rest if authority_end == -1 else rest[:authority_end]
+    if not sep or "@" not in authority:
+        return url
+    userinfo, _, host = authority.rpartition("@")
+    user, has_password, password = userinfo.partition(":")
+    if len(password) >= 2 and password[0] == "[" and password[-1] == "]":
+        password = password[1:-1]
+    userinfo = quote(unquote(user), safe="")
+    if has_password:
+        userinfo += ":" + quote(unquote(password), safe="")
+    return f"{scheme}://{userinfo}@{host}{rest[len(authority):]}"
+
+
 def database_url():
     # Tolerate values pasted into a dashboard with surrounding quotes or spaces.
     url = os.getenv("DATABASE_URL", "").strip().strip("'\"").strip()
@@ -35,6 +57,8 @@ def database_url():
         if url.startswith(scheme):
             url = "postgresql://" + url[len(scheme):]
             break
+    if url.startswith("postgresql://"):
+        url = _normalise_credentials(url)
     # Supabase only accepts encrypted connections.
     if "supabase." in url and "sslmode=" not in url:
         url += ("&" if "?" in url else "?") + "sslmode=require"
@@ -58,8 +82,12 @@ def describe_database():
     if not is_postgres():
         return f"sqlite ({database_path()})"
     from urllib.parse import urlsplit
-    parts = urlsplit(database_url())
-    return f"postgresql ({parts.hostname}:{parts.port or 5432}{parts.path})"
+    try:
+        parts = urlsplit(database_url())
+        return f"postgresql ({parts.hostname}:{parts.port or 5432}{parts.path})"
+    except ValueError:
+        # Logging must never stop startup; the connection itself reports real problems.
+        return "postgresql (unparseable DATABASE_URL)"
 
 
 def require_persistent_database():
