@@ -89,7 +89,7 @@ function AppLayout() {
           mx={isNoConstraint ? 0 : 'auto'}
           w="100%"
           px={isNoConstraint ? 0 : { base: 4, md: 6, lg: 8 }}
-          pb={isAuthenticated ? { base: '72px', md: 0 } : 0}
+          pb={isAuthenticated ? { base: 'calc(56px + env(safe-area-inset-bottom))', md: 0 } : 0}
         >
           {routesElement}
         </Box>
@@ -97,6 +97,7 @@ function AppLayout() {
         {/* Footer */}
         <Box
           as="footer"
+          display={isAuthenticated ? { base: 'none', md: 'block' } : 'block'}
           borderTop="1px solid"
           borderColor="whiteAlpha.100"
           py={5}

@@ -11,19 +11,45 @@ import {
 } from '@chakra-ui/react';
 import {
   MdHome, MdMenuBook, MdInbox, MdNotifications, MdPsychology,
+  MdOutlineHome, MdOutlineMenuBook, MdOutlineInbox, MdNotificationsNone, MdOutlinePsychology,
   MdMenu, MdInsights, MdSupportAgent, MdHealthAndSafety,
   MdAccountCircle, MdSettings, MdAdminPanelSettings, MdLogout,
-  MdDarkMode, MdLightMode,
+  MdDarkMode, MdLightMode, MdAdd,
 } from 'react-icons/md';
 
-// ── The 5 Core Navbar Items ──
+// ── The 5 Core Navbar Items ── (outlined icon when idle, filled when active, as on X)
 const CORE_TABS = [
-  { icon: MdHome, label: 'Home', shortLabel: 'Home', key: 'feed', href: '/feed' },
-  { icon: MdMenuBook, label: 'Private diary', shortLabel: 'Diary', key: 'diary', href: '/diary' },
-  { icon: MdInbox, label: 'Inbox', shortLabel: 'Inbox', key: 'inbox', href: '/inbox' },
-  { icon: MdNotifications, label: 'Notifications', shortLabel: 'Alerts', key: 'notifications', href: '/notifications', hasBadge: true },
-  { icon: MdPsychology, label: 'AI Support', shortLabel: 'AI Support', key: 'chat', href: '/chat' },
+  { icon: MdOutlineHome, activeIcon: MdHome, label: 'Home', key: 'feed', href: '/feed' },
+  { icon: MdOutlineMenuBook, activeIcon: MdMenuBook, label: 'Private diary', key: 'diary', href: '/diary' },
+  { icon: MdOutlineInbox, activeIcon: MdInbox, label: 'Inbox', key: 'inbox', href: '/inbox' },
+  { icon: MdNotificationsNone, activeIcon: MdNotifications, label: 'Notifications', key: 'notifications', href: '/notifications', hasBadge: true },
+  { icon: MdOutlinePsychology, activeIcon: MdPsychology, label: 'AI Support', key: 'chat', href: '/chat' },
 ];
+
+// Hide the mobile top bar while scrolling down and bring it back on scroll up,
+// like the Facebook and X apps.
+function useHideOnScroll() {
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (Math.abs(y - lastY) > 6) {
+          setHidden(y > lastY && y > 80);
+          lastY = y;
+        }
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return hidden;
+}
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -32,6 +58,7 @@ export default function Navbar() {
   const location = useLocation();
   const isDark = colorMode === 'dark';
   const [unreadCount, setUnreadCount] = useState(0);
+  const topBarHidden = useHideOnScroll();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -64,7 +91,7 @@ export default function Navbar() {
   })();
 
   const navBg      = isDark ? '#242526' : 'white';
-  const bottomBg   = isDark ? '#1c1d1e' : 'white';
+  const bottomBg   = isDark ? 'rgba(28,29,30,0.88)' : 'rgba(255,255,255,0.88)';
   const border     = isDark ? 'rgba(255,255,255,0.1)' : '#e4e6eb';
   const iconBg     = isDark ? 'rgba(255,255,255,0.1)' : '#f0f2f5';
   const iconHov    = isDark ? 'rgba(255,255,255,0.16)' : '#e4e6eb';
@@ -79,8 +106,10 @@ export default function Navbar() {
           ════════════════════════════════════════════════════════════════════════ */}
       <Box
         as="nav" bg={navBg} borderBottom="1px solid" borderColor={border}
-        position="sticky" top={0} zIndex={200} h="56px"
+        position="sticky" top={0} zIndex={200} h={{ base: '52px', md: '56px' }}
         boxShadow={isDark ? '0 1px 8px rgba(0,0,0,0.4)' : '0 1px 4px rgba(0,0,0,0.08)'}
+        transform={{ base: topBarHidden ? 'translateY(-100%)' : 'translateY(0)', md: 'none' }}
+        transition="transform 0.25s ease"
       >
         <Flex h="100%" align="center" px={{ base: 3, md: 4, lg: 6 }} justify="space-between" gap={2}>
 
@@ -125,8 +154,8 @@ export default function Navbar() {
               maxW="560px"
             >
               {CORE_TABS.map(tab => {
-                const Icon = tab.icon;
                 const isActive = activeTab === tab.key;
+                const Icon = isActive ? tab.activeIcon : tab.icon;
                 return (
                   <Tooltip key={tab.key} label={tab.label} placement="bottom" hasArrow openDelay={400}>
                     <Box
@@ -212,9 +241,39 @@ export default function Navbar() {
                   </Box>
                 </Tooltip>
 
-                {/* Hamburger "More Menus" Button (both Mobile & Desktop) */}
+                {/* Mobile: Facebook-style create button */}
+                <IconButton
+                  as={RouterLink}
+                  to="/create"
+                  display={{ base: 'inline-flex', md: 'none' }}
+                  aria-label="Write a diary post"
+                  icon={<MdAdd size={22} />}
+                  bg={iconBg}
+                  _hover={{ bg: iconHov }}
+                  color={mainText}
+                  borderRadius="full"
+                  size="sm"
+                  w="36px"
+                  h="36px"
+                  variant="ghost"
+                />
+
+                {/* Mobile: avatar opens the menu drawer, as on X */}
+                <Box
+                  as="button"
+                  type="button"
+                  onClick={onOpen}
+                  display={{ base: 'flex', md: 'none' }}
+                  aria-label="Open menu"
+                  borderRadius="full"
+                >
+                  <Avatar size="sm" name={user?.username} bg="brand.500" color="white" />
+                </Box>
+
+                {/* Desktop: hamburger "More Menus" button */}
                 <Tooltip label="More menus" hasArrow>
                   <IconButton
+                    display={{ base: 'none', md: 'inline-flex' }}
                     aria-label="Open more navigation menus"
                     icon={<MdMenu size={24} />}
                     onClick={onOpen}
@@ -246,80 +305,66 @@ export default function Navbar() {
       </Box>
 
       {/* ════════════════════════════════════════════════════════════════════════
-          MOBILE BOTTOM NAVBAR (Instagram / Facebook Style Core 5 Tabs)
+          MOBILE BOTTOM TAB BAR (X style: icon-only, translucent, safe-area aware)
           ════════════════════════════════════════════════════════════════════════ */}
       {isAuthenticated && (
         <Box
+          as="nav"
+          aria-label="Primary"
           display={{ base: 'block', md: 'none' }}
           position="fixed"
           bottom={0}
           left={0}
           right={0}
-          h="60px"
+          pb="env(safe-area-inset-bottom)"
           bg={bottomBg}
+          backdropFilter="saturate(180%) blur(12px)"
           borderTop="1px solid"
           borderColor={border}
           zIndex={200}
-          boxShadow={isDark ? '0 -2px 12px rgba(0,0,0,0.5)' : '0 -2px 10px rgba(0,0,0,0.06)'}
         >
-          <Flex h="100%" align="center" justify="space-around" px={1}>
+          <Flex h="56px" align="stretch" justify="space-around">
             {CORE_TABS.map(tab => {
-              const Icon = tab.icon;
               const isActive = activeTab === tab.key;
+              const Icon = isActive ? tab.activeIcon : tab.icon;
               return (
                 <Box
                   key={tab.key}
                   as={RouterLink}
                   to={tab.href}
+                  aria-label={tab.label}
+                  aria-current={isActive ? 'page' : undefined}
                   flex="1"
-                  h="100%"
                   display="flex"
-                  flexDirection="column"
                   alignItems="center"
                   justifyContent="center"
-                  color={isActive ? 'brand.500' : subtleText}
+                  color={isActive ? (isDark ? 'white' : 'black') : subtleText}
                   _hover={{ textDecoration: 'none' }}
-                  position="relative"
-                  py={1}
+                  _active={{ bg: iconBg }}
+                  transition="color 0.15s"
                 >
                   <Box position="relative">
-                    <Icon size={24} />
+                    <Icon size={27} />
                     {tab.hasBadge && unreadCount > 0 && (
                       <Badge
                         position="absolute"
-                        top="-3px"
-                        right="-7px"
-                        colorScheme="red"
+                        top="-4px"
+                        right="-8px"
+                        bg="brand.500"
+                        color="white"
+                        border="2px solid"
+                        borderColor={isDark ? '#1c1d1e' : 'white'}
                         borderRadius="full"
-                        fontSize="3xs"
-                        px={1.5}
-                        py={0.2}
+                        fontSize="9px"
+                        minW="18px"
+                        textAlign="center"
+                        px={1}
                         fontWeight="800"
                       >
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </Badge>
                     )}
                   </Box>
-                  <Text
-                    fontSize="10px"
-                    fontWeight={isActive ? '700' : '500'}
-                    fontFamily="'Poppins', sans-serif"
-                    mt={0.5}
-                    letterSpacing="-0.2px"
-                  >
-                    {tab.shortLabel}
-                  </Text>
-                  {isActive && (
-                    <Box
-                      position="absolute"
-                      top="0"
-                      left="20%"
-                      right="20%"
-                      h="2.5px"
-                      bg="brand.500"
-                      borderRadius="full"
-                    />
-                  )}
                 </Box>
               );
             })}

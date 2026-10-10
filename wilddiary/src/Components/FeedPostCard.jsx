@@ -53,17 +53,20 @@ export default function FeedPostCard({ post, isDark }) {
 
   return (
     <Box
-      bg={cardBg} border="1px solid" borderColor={border} borderRadius="xl"
+      as="article"
+      bg={cardBg} borderColor={border} borderStyle="solid"
+      // Edge-to-edge on phones (Facebook app), rounded card on larger screens.
+      borderWidth={{ base: '1px 0', md: '1px' }} borderRadius={{ base: 0, md: 'xl' }}
       overflow="hidden" fontFamily="'Poppins', sans-serif"
       transition="box-shadow 0.2s"
-      _hover={{ boxShadow: isDark ? '0 2px 16px rgba(0,0,0,0.4)' : '0 2px 16px rgba(0,0,0,0.1)' }}
+      _hover={{ boxShadow: { md: isDark ? '0 2px 16px rgba(0,0,0,0.4)' : '0 2px 16px rgba(0,0,0,0.1)' } }}
     >
       {/* ─── Header ─── */}
-      <Flex align="flex-start" justify="space-between" px={4} pt={4} pb={2}>
-        <HStack spacing={3} align="flex-start">
+      <Flex align="flex-start" justify="space-between" px={{ base: 3, md: 4 }} pt={{ base: 3, md: 4 }} pb={2}>
+        <HStack spacing={{ base: 2.5, md: 3 }} align="flex-start" minW={0}>
           <Box position="relative" flexShrink={0}>
             <Avatar
-              size="md"
+              size={{ base: 'sm', md: 'md' }}
               name={post.is_anonymous ? undefined : post.author_name}
               bg={isCounselor ? 'green.500' : post.is_anonymous ? 'gray.500' : 'brand.500'}
               color="white"
@@ -136,9 +139,9 @@ export default function FeedPostCard({ post, isDark }) {
       </Flex>
 
       {/* ─── Content ─── */}
-      <Box px={4} pb={3}>
+      <Box px={{ base: 3, md: 4 }} pb={3}>
         <Text
-          fontSize="sm" lineHeight="1.75" color={textColor}
+          fontSize={{ base: '15px', md: 'sm' }} lineHeight="1.6" color={textColor}
           whiteSpace="pre-wrap" fontFamily="'Poppins', sans-serif"
         >
           {post.content}
@@ -147,7 +150,7 @@ export default function FeedPostCard({ post, isDark }) {
 
       {/* ─── Reaction summary ─── */}
       {likeCount > 0 && (
-        <Box px={4} pb={2}>
+        <Box px={{ base: 3, md: 4 }} pb={2}>
           <Flex justify="space-between" align="center">
             <HStack spacing={1}>
               <Text fontSize="13px" lineHeight="1">👍❤️😢</Text>
@@ -170,9 +173,9 @@ export default function FeedPostCard({ post, isDark }) {
       <Divider borderColor={border} />
 
       {/* ─── Action buttons ─── */}
-      <HStack spacing={0} px={2} py={1}>
+      <HStack spacing={0} px={{ base: 1, md: 2 }} py={1}>
         <Button
-          flex="1" variant="ghost" size="sm" borderRadius="xl"
+          flex="1" variant="ghost" size="sm" h={{ base: '40px', md: 8 }} borderRadius="xl"
           fontFamily="'Poppins', sans-serif" fontWeight="700"
           color={liked ? 'brand.500' : subtle}
           leftIcon={<MdThumbUp size={20} color={liked ? '#7c3aed' : subtle} />}
@@ -182,7 +185,7 @@ export default function FeedPostCard({ post, isDark }) {
         </Button>
 
         <Button
-          flex="1" variant="ghost" size="sm" borderRadius="xl"
+          flex="1" variant="ghost" size="sm" h={{ base: '40px', md: 8 }} borderRadius="xl"
           fontFamily="'Poppins', sans-serif" fontWeight="700" color={subtle}
           leftIcon={<MdChat size={20} color={subtle} />}
           _hover={{ bg: hoverBg }}
@@ -192,7 +195,7 @@ export default function FeedPostCard({ post, isDark }) {
         </Button>
 
         <Button
-          flex="1" variant="ghost" size="sm" borderRadius="xl"
+          flex="1" variant="ghost" size="sm" h={{ base: '40px', md: 8 }} borderRadius="xl"
           fontFamily="'Poppins', sans-serif" fontWeight="700" color={subtle}
           leftIcon={<MdShare size={20} color={subtle} />}
           _hover={{ bg: hoverBg }}

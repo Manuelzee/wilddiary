@@ -6,7 +6,7 @@ import { useColorMode } from '@chakra-ui/react';
 import {
   Box, Flex, VStack, HStack, Text, Avatar, Button, IconButton, Input,
   InputGroup, InputLeftElement, Divider, Badge, Tooltip, Collapse,
-  Spinner, Wrap, WrapItem, Alert, AlertIcon, AlertDescription,
+  Spinner, Alert, AlertIcon, AlertDescription,
 } from '@chakra-ui/react';
 import {
   MdMenuBook, MdInsights, MdHealthAndSafety, MdSettings, MdSupportAgent,
@@ -362,24 +362,36 @@ function CreatePostBox({ user, isDark }) {
   const inputBg = isDark ? 'rgba(255,255,255,0.07)' : '#f0f2f5';
 
   return (
-    <Box bg={card} border="1px solid" borderColor={border} borderRadius="xl" p={4} mb={3}>
-      <HStack mb={3} spacing={2}>
+    <Box
+      bg={card} borderColor={border} borderStyle="solid"
+      borderWidth={{ base: '0 0 1px', md: '1px' }} borderRadius={{ base: 0, md: 'xl' }}
+      p={{ base: 3, md: 4 }} mb={{ base: 2, md: 3 }}
+    >
+      <HStack mb={{ base: 0, md: 3 }} spacing={2}>
         <Avatar size="sm" name={user?.username} bg="brand.500" color="white" fontFamily="'Poppins', sans-serif" flexShrink={0} />
         <Box
           as={RouterLink} to="/create"
-          flex="1" px={4} py="9px"
+          flex="1" minW={0} px={4} py="9px"
           borderRadius="full" bg={inputBg}
           cursor="text"
           _hover={{ bg: isDark ? 'rgba(255,255,255,0.1)' : '#e4e6eb', textDecoration: 'none' }}
           transition="background 0.15s"
         >
-          <Text fontSize="sm" color={subtle} fontFamily="'Poppins', sans-serif">
-            What's on your mind, {user?.username}?
+          <Text fontSize="sm" color={subtle} fontFamily="'Poppins', sans-serif" noOfLines={1}>
+            What's on your mind<Box as="span" display={{ base: 'none', md: 'inline' }}>, {user?.username}</Box>?
           </Text>
         </Box>
+        {/* Mobile: single-row composer with a photo shortcut, as in the Facebook app */}
+        <IconButton
+          as={RouterLink} to="/create"
+          display={{ base: 'inline-flex', md: 'none' }}
+          aria-label="Add a photo"
+          icon={<MdPhoto size={24} color="#45bd62" />}
+          variant="ghost" borderRadius="full" size="sm"
+        />
       </HStack>
-      <Divider borderColor={border} mb={3} />
-      <HStack justify="space-evenly" spacing={0}>
+      <Divider borderColor={border} mb={3} display={{ base: 'none', md: 'block' }} />
+      <HStack justify="space-evenly" spacing={0} display={{ base: 'none', md: 'flex' }}>
         {[
           { icon: <MdVideoCameraBack size={20} color="#f02849" />, label: 'Live video'    },
           { icon: <MdPhoto size={20} color="#45bd62" />,           label: 'Photo/Video'  },
@@ -447,43 +459,72 @@ export default function Feed() {
         <LeftSidebar user={user} isDark={isDark} />
 
         {/* ── Center Feed ── */}
-        <Box flex="1" py={4} px={{ base: 2, md: 4 }} minW={0}>
+        <Box flex="1" py={{ base: 0, md: 4 }} px={{ base: 0, md: 4 }} minW={0}>
 
           {/* Create Post (authenticated only) */}
           {isAuthenticated && <CreatePostBox user={user} isDark={isDark} />}
 
           {/* Filter bar */}
-          <Box bg={card} border="1px solid" borderColor={border} borderRadius="xl" p={3} mb={3}>
-            <InputGroup size="sm" mb={3}>
-              <InputLeftElement pointerEvents="none">
-                <MdSearch color={isDark ? '#8a8d91' : '#b0b3b8'} size={18} />
-              </InputLeftElement>
-              <Input
-                placeholder="Search diary entries by keyword…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') fetchPosts(category, sort, searchQuery); }}
-                borderRadius="full"
-                bg={isDark ? 'rgba(255,255,255,0.06)' : 'gray.50'}
-                borderColor={border}
-                fontFamily="'Poppins', sans-serif"
-                fontSize="xs"
-              />
-              {searchQuery && (
-                <Button
-                  size="xs"
-                  position="absolute"
-                  right="8px"
-                  top="6px"
-                  zIndex={2}
+          <Box
+            bg={card} borderColor={border} borderStyle="solid"
+            borderWidth={{ base: '0 0 1px', md: '1px' }} borderRadius={{ base: 0, md: 'xl' }}
+            p={{ base: 0, md: 3 }} mb={{ base: 2, md: 3 }}
+          >
+            {/* Mobile: X-style underlined Latest / Top tabs */}
+            <Flex display={{ base: 'flex', md: 'none' }} borderBottom="1px solid" borderColor={border} role="tablist">
+              {[{ value: 'latest', label: 'Latest' }, { value: 'popular', label: 'Top' }].map(tab => {
+                const active = sort === tab.value;
+                return (
+                  <Box
+                    key={tab.value} as="button" type="button" role="tab" aria-selected={active}
+                    flex="1" h="48px" position="relative"
+                    onClick={() => setSort(tab.value)}
+                    fontFamily="'Poppins', sans-serif" fontSize="sm"
+                    fontWeight={active ? '800' : '600'}
+                    color={active ? text : subtle}
+                    _active={{ bg: hoverBg }}
+                  >
+                    {tab.label}
+                    {active && (
+                      <Box position="absolute" bottom="0" left="50%" transform="translateX(-50%)"
+                        w="56px" h="4px" bg="brand.500" borderRadius="full" />
+                    )}
+                  </Box>
+                );
+              })}
+            </Flex>
+            <Box px={{ base: 3, md: 0 }} pt={{ base: 3, md: 0 }} mb={3}>
+              <InputGroup size="sm">
+                <InputLeftElement pointerEvents="none">
+                  <MdSearch color={isDark ? '#8a8d91' : '#b0b3b8'} size={18} />
+                </InputLeftElement>
+                <Input
+                  placeholder="Search diary entries by keyword…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') fetchPosts(category, sort, searchQuery); }}
                   borderRadius="full"
-                  onClick={() => { setSearchQuery(''); fetchPosts(category, sort, ''); }}
-                >
-                  Clear
-                </Button>
-              )}
-            </InputGroup>
-            <Flex justify="space-between" align="center" mb={2} flexWrap="wrap" gap={2}>
+                  bg={isDark ? 'rgba(255,255,255,0.06)' : 'gray.50'}
+                  borderColor={border}
+                  fontFamily="'Poppins', sans-serif"
+                  fontSize="xs"
+                />
+                {searchQuery && (
+                  <Button
+                    size="xs"
+                    position="absolute"
+                    right="8px"
+                    top="6px"
+                    zIndex={2}
+                    borderRadius="full"
+                    onClick={() => { setSearchQuery(''); fetchPosts(category, sort, ''); }}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </InputGroup>
+            </Box>
+            <Flex display={{ base: 'none', md: 'flex' }} justify="space-between" align="center" mb={2} flexWrap="wrap" gap={2}>
               <Text fontWeight="800" fontSize="sm" color={text} fontFamily="'Poppins', sans-serif">
                 Diary Posts
               </Text>
@@ -525,27 +566,31 @@ export default function Feed() {
                 )}
               </HStack>
             </Flex>
-            <Wrap spacing={2}>
+            {/* Categories: one swipeable row on mobile, wrapping on desktop */}
+            <Flex
+              gap={2} px={{ base: 3, md: 0 }} pb={{ base: 3, md: 0 }}
+              flexWrap={{ base: 'nowrap', md: 'wrap' }} overflowX={{ base: 'auto', md: 'visible' }}
+              sx={{ scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } }}
+            >
               {CATS.map(cat => (
-                <WrapItem key={cat.value}>
-                  <Button
-                    size="xs" borderRadius="full" fontFamily="'Poppins', sans-serif"
-                    variant={category === cat.value ? 'solid' : 'ghost'}
-                    bg={category === cat.value ? 'brand.500' : 'transparent'}
-                    color={category === cat.value ? 'white' : undefined}
-                    _hover={category === cat.value ? { bg: 'brand.600' } : { bg: hoverBg }}
-                    onClick={() => setCategory(cat.value)}
-                  >
-                    {cat.label}
-                  </Button>
-                </WrapItem>
+                <Button
+                  key={cat.value} flexShrink={0}
+                  size={{ base: 'sm', md: 'xs' }} borderRadius="full" fontFamily="'Poppins', sans-serif"
+                  variant={category === cat.value ? 'solid' : 'ghost'}
+                  bg={category === cat.value ? 'brand.500' : { base: isDark ? 'whiteAlpha.100' : 'gray.100', md: 'transparent' }}
+                  color={category === cat.value ? 'white' : undefined}
+                  _hover={category === cat.value ? { bg: 'brand.600' } : { bg: hoverBg }}
+                  onClick={() => setCategory(cat.value)}
+                >
+                  {cat.label}
+                </Button>
               ))}
-            </Wrap>
+            </Flex>
           </Box>
 
           {/* Guest notice */}
           {!isAuthenticated && (
-            <Alert status="info" borderRadius="xl" mb={3} bg={isDark ? 'rgba(59,130,246,0.08)' : 'blue.50'} border="1px solid" borderColor={isDark ? 'blue.800' : 'blue.200'}>
+            <Alert status="info" borderRadius={{ base: 0, md: 'xl' }} mb={{ base: 2, md: 3 }} bg={isDark ? 'rgba(59,130,246,0.08)' : 'blue.50'} borderWidth={{ base: '1px 0', md: '1px' }} borderColor={isDark ? 'blue.800' : 'blue.200'}>
               <AlertIcon />
               <AlertDescription fontSize="sm" fontFamily="'Poppins', sans-serif">
                 <Text fontWeight="700" fontSize="sm">Viewing as Guest</Text>
@@ -558,7 +603,7 @@ export default function Feed() {
 
           {/* Demo notice */}
           {isDemoShowing && !error && (
-            <Alert status="info" borderRadius="xl" mb={3} bg={isDark ? 'rgba(124,58,237,0.08)' : 'purple.50'} border="1px solid" borderColor={isDark ? 'purple.800' : 'purple.200'}>
+            <Alert status="info" borderRadius={{ base: 0, md: 'xl' }} mb={{ base: 2, md: 3 }} bg={isDark ? 'rgba(124,58,237,0.08)' : 'purple.50'} borderWidth={{ base: '1px 0', md: '1px' }} borderColor={isDark ? 'purple.800' : 'purple.200'}>
               <AlertIcon />
               <AlertDescription fontSize="xs" fontFamily="'Poppins', sans-serif" color={subtle}>
                 Showing demo posts — be the first to share a real diary entry!
@@ -568,7 +613,7 @@ export default function Feed() {
 
           {/* Error */}
           {error && (
-            <Alert status="error" borderRadius="xl" mb={3}>
+            <Alert status="error" borderRadius={{ base: 0, md: 'xl' }} mb={{ base: 2, md: 3 }}>
               <AlertIcon />
               <AlertDescription fontSize="sm" fontFamily="'Poppins', sans-serif">{error}</AlertDescription>
             </Alert>
@@ -584,7 +629,7 @@ export default function Feed() {
 
           {/* Post list */}
           {!(loading && posts.length === 0) && (
-            <VStack spacing={3} align="stretch">
+            <VStack spacing={{ base: 2, md: 3 }} align="stretch">
               {displayPosts.map(post => (
                 <FeedPostCard key={post.id} post={post} isDark={isDark} />
               ))}
