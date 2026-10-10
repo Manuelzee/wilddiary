@@ -12,6 +12,9 @@ services:
         value: 10000
       - key: DATABASE_URL
         sync: false
+      # 2 workers x DB_POOL_SIZE 5 = 10 connections, within Supabase free-tier pooler limits.
+      - key: WEB_CONCURRENCY
+        value: 2
       - key: CORS_ORIGINS
         value: https://wilddiary.pages.dev,https://wilddiary-social.netlify.app,https://wilddiary.netlify.app
       - key: JWT_SECRET

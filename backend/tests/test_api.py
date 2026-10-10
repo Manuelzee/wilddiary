@@ -6,6 +6,9 @@ from unittest.mock import patch
 
 
 TEST_DIR = tempfile.TemporaryDirectory()
+# Tests clear tables; never let a DATABASE_URL from .env point them at a real database.
+os.environ["DATABASE_URL"] = ""
+os.environ["APP_ENV"] = "development"
 os.environ["DATABASE_PATH"] = str(Path(TEST_DIR.name) / "test.db")
 os.environ["JWT_SECRET"] = "test-secret-that-is-not-used-outside-tests"
 
@@ -465,6 +468,72 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(data["database"], "ok")
         self.assertIn("latency_ms", data)
         self.assertLess(data["latency_ms"], 100.0)  # sub-100ms DB check
+
+    def test_forgot_password_rate_limit_counts_repeat_requests(self):
+        self.register("rate_user", "rate@example.com")
+        statuses = [
+            self.client.post("/api/auth/forgot-password", json={"email": "rate@example.com"}).status_code
+            for _ in range(6)
+        ]
+        self.assertEqual(statuses[:5], [200] * 5)
+        self.assertEqual(statuses[5], 429)
+
+    def test_only_newest_reset_code_is_accepted(self):
+        self.register("two_codes", "twocodes@example.com")
+        first = self.client.post("/api/auth/forgot-password", json={"email": "twocodes@example.com"}).get_json()["dev_otp"]
+        second = self.client.post("/api/auth/forgot-password", json={"email": "twocodes@example.com"}).get_json()["dev_otp"]
+        if first == second:
+            self.skipTest("Random codes collided.")
+        stale = self.client.post("/api/auth/reset-password", json={
+            "email": "twocodes@example.com", "otp": first, "new_password": "brand-new-password",
+        })
+        self.assertEqual(stale.get_json()["code"], "incorrect_code")
+        fresh = self.client.post("/api/auth/reset-password", json={
+            "email": "twocodes@example.com", "otp": second, "new_password": "brand-new-password",
+        })
+        self.assertEqual(fresh.status_code, 200)
+
+    def test_production_never_exposes_reset_code(self):
+        self.register("prod_reset", "prod-reset@example.com")
+        self.app.config["TESTING"] = False
+        try:
+            with patch.dict(os.environ, {"APP_ENV": "production", "RESEND_API_KEY": ""}):
+                missing_key = self.client.post("/api/auth/forgot-password", json={"email": "prod-reset@example.com"})
+            self.assertEqual(missing_key.status_code, 503)
+            self.assertNotIn("dev_otp", missing_key.get_json())
+            # example.com addresses are simulated by the email service, so no network call is made.
+            with patch.dict(os.environ, {"APP_ENV": "production", "RESEND_API_KEY": "re_test"}):
+                with_key = self.client.post("/api/auth/forgot-password", json={"email": "prod-reset@example.com"})
+            self.assertEqual(with_key.status_code, 200)
+            self.assertNotIn("dev_otp", with_key.get_json())
+        finally:
+            self.app.config["TESTING"] = True
+
+    def test_report_cannot_release_moderated_post(self):
+        owner = self.register("held_owner", "held-owner@example.com")
+        reporter = self.register("held_reporter", "held-reporter@example.com")
+        created = self.client.post("/api/posts", headers=self.auth(owner), json={
+            "content": "Someone told me kys today.", "category": "emotional",
+        }).get_json()
+        self.assertEqual(created["status"], "under_review")
+        report = self.client.post(f"/api/posts/{created['post_id']}/report", headers=self.auth(reporter), json={"reason": "Abusive"})
+        self.assertEqual(report.get_json()["status"], "under_review")
+
+    def test_preferences_and_ai_insight_upserts(self):
+        member = self.register("upsert_user", "upsert@example.com")
+        headers = self.auth(member)
+        prefs = self.client.get("/api/users/me/preferences", headers=headers)
+        self.assertEqual(prefs.status_code, 200)
+        self.client.patch("/api/users/me/preferences", headers=headers, json={"ai_support_enabled": True})
+        post_id = self.client.post("/api/posts", headers=headers, json={
+            "content": "Money has been tight this month.", "category": "financial",
+        }).get_json()["post_id"]
+        for _ in range(2):
+            insight = self.client.post(f"/api/posts/{post_id}/ai-insight", headers=headers)
+            self.assertEqual(insight.status_code, 200)
+        with transaction() as connection:
+            count = connection.execute("SELECT COUNT(*) FROM ai_insights WHERE post_id=?", (post_id,)).fetchone()[0]
+        self.assertEqual(count, 1)
 
 
 if __name__ == "__main__":

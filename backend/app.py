@@ -141,6 +141,15 @@ def verify_password(stored, password):
     return hmac.compare_digest(stored, legacy), True
 
 
+STATUS_RANK = {"active": 0, "under_review": 1, "flagged": 2}
+
+
+def escalated_status(current, report_count):
+    """Reports can only raise a moderation status, never lower one."""
+    threshold = "flagged" if report_count >= 5 else ("under_review" if report_count >= 3 else "active")
+    return max(current, threshold, key=STATUS_RANK.get)
+
+
 def serialize_post(row, viewer_id=None):
     row["is_anonymous"] = bool(row["is_anonymous"])
     row["liked_by_me"] = bool(row.pop("liked_by_me", 0))
@@ -276,6 +285,10 @@ def register_routes(app):
         generic_message = "If an account with that email exists, a 6-digit verification code has been sent."
         dev_otp = None
         is_prod = os.getenv("APP_ENV", "development").lower() == "production" and not app.config.get("TESTING")
+        if is_prod and not os.getenv("RESEND_API_KEY", "").strip():
+            # Never fall back to exposing the code in production.
+            app.logger.error("Password reset requested but RESEND_API_KEY is not configured.")
+            return api_error("Password reset is temporarily unavailable. Please try again later.", 503, "email_unavailable")
 
         if user and user.get("is_active", 1):
             otp = f"{secrets.randbelow(1_000_000):06d}"
@@ -283,7 +296,12 @@ def register_routes(app):
             expires_at = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M:%S")
 
             with transaction() as connection:
-                connection.execute("DELETE FROM password_resets WHERE lower(email)=lower(?)", (email,))
+                # Keep the last hour of requests so the rate limit above can count them.
+                # Only the newest code is ever accepted by reset-password.
+                connection.execute(
+                    "DELETE FROM password_resets WHERE lower(email)=lower(?) AND created_at < ?",
+                    (email, one_hour_ago),
+                )
                 connection.execute(
                     "INSERT INTO password_resets(email, otp_hash, expires_at) VALUES(?,?,?)",
                     (email, otp_hash, expires_at),
@@ -293,10 +311,10 @@ def register_routes(app):
                 send_password_reset_email(email, otp)
             except Exception as exc:
                 app.logger.exception("Failed to dispatch password reset email to %s: %s", email, exc)
-                if is_prod and os.getenv("RESEND_API_KEY"):
+                if is_prod:
                     return api_error("Unable to deliver verification email. Please try again shortly.", 502, "email_delivery_failed")
 
-            if not is_prod or not os.getenv("RESEND_API_KEY"):
+            if not is_prod:
                 dev_otp = otp
 
         response_body = {"message": generic_message}
@@ -325,15 +343,13 @@ def register_routes(app):
         if not record:
             return api_error("No reset request found for this email, or code has expired. Request a new code.", 400, "invalid_code")
 
+        # Expired or exhausted codes stay in place (rather than being deleted) so an
+        # older code can never become the newest one and get a fresh set of attempts.
         now_utc = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         if record["expires_at"] < now_utc:
-            with transaction() as connection:
-                connection.execute("DELETE FROM password_resets WHERE id=?", (record["id"],))
             return api_error("Verification code has expired. Please request a new code.", 400, "expired_code")
 
         if record.get("attempts", 0) >= 5:
-            with transaction() as connection:
-                connection.execute("DELETE FROM password_resets WHERE id=?", (record["id"],))
             return api_error("Too many failed attempts. Please request a new verification code.", 429, "too_many_attempts")
 
         computed_hash = hashlib.sha256(otp.encode("utf-8")).hexdigest()
@@ -430,7 +446,7 @@ def register_routes(app):
         prefs = fetch_one("SELECT * FROM user_preferences WHERE user_id=?", (user["id"],))
         if not prefs:
             with transaction() as connection:
-                connection.execute("INSERT OR IGNORE INTO user_preferences(user_id) VALUES(?)", (user["id"],))
+                connection.execute("INSERT INTO user_preferences(user_id) VALUES(?) ON CONFLICT(user_id) DO NOTHING", (user["id"],))
             prefs = fetch_one("SELECT * FROM user_preferences WHERE user_id=?", (user["id"],))
         return jsonify(preferences=prefs or {"user_id": user["id"], "default_anonymous": 1, "email_notifications": 1, "reaction_notifications": 1, "counselor_notifications": 1, "ai_support_enabled": 0})
 
@@ -548,14 +564,14 @@ def register_routes(app):
             return api_error("Please provide a report reason.")
         try:
             with transaction() as connection:
-                post = connection.execute("SELECT user_id FROM posts WHERE id=? AND status!='flagged'", (post_id,)).fetchone()
+                post = connection.execute("SELECT user_id,status FROM posts WHERE id=? AND status!='flagged'", (post_id,)).fetchone()
                 if not post: return api_error("Post not found.", 404, "not_found")
                 if post["user_id"] == user["id"]: return api_error("You cannot report your own post.", 403, "forbidden")
                 if connection.execute("SELECT 1 FROM reports WHERE reporter_id=? AND post_id=?", (user["id"], post_id)).fetchone():
                     return api_error("You have already reported this post.", 409, "already_reported")
                 connection.execute("INSERT INTO reports(reporter_id,post_id,reason) VALUES(?,?,?)", (user["id"], post_id, reason))
                 count = connection.execute("SELECT COUNT(*) FROM reports WHERE post_id=?", (post_id,)).fetchone()[0]
-                new_status = "flagged" if count >= 5 else ("under_review" if count >= 3 else "active")
+                new_status = escalated_status(post["status"], count)
                 connection.execute("UPDATE posts SET status=? WHERE id=?", (new_status, post_id))
         except IntegrityError:
             return api_error("You have already reported this post.", 409, "already_reported")
@@ -611,7 +627,7 @@ def register_routes(app):
             return api_error("Please provide a report reason.")
         try:
             with transaction() as connection:
-                comment = connection.execute("SELECT user_id FROM comments WHERE id=? AND post_id=? AND status!='flagged'", (comment_id, post_id)).fetchone()
+                comment = connection.execute("SELECT user_id,status FROM comments WHERE id=? AND post_id=? AND status!='flagged'", (comment_id, post_id)).fetchone()
                 if not comment:
                     return api_error("Comment not found.", 404, "not_found")
                 if comment["user_id"] == user["id"]:
@@ -620,7 +636,7 @@ def register_routes(app):
                     return api_error("You have already reported this comment.", 409, "already_reported")
                 connection.execute("INSERT INTO comment_reports(reporter_id,comment_id,reason) VALUES(?,?,?)", (user["id"], comment_id, reason))
                 count = connection.execute("SELECT COUNT(*) FROM comment_reports WHERE comment_id=?", (comment_id,)).fetchone()[0]
-                new_status = "flagged" if count >= 5 else ("under_review" if count >= 3 else "active")
+                new_status = escalated_status(comment["status"], count)
                 connection.execute("UPDATE comments SET status=? WHERE id=?", (new_status, comment_id))
         except IntegrityError:
             return api_error("You have already reported this comment.", 409, "already_reported")
@@ -636,7 +652,11 @@ def register_routes(app):
         if not post: return api_error("Post not found.", 404, "not_found")
         text = generate_post_insight(post["content"], post["category"])
         with transaction() as connection:
-            connection.execute("INSERT OR REPLACE INTO ai_insights(post_id,insight_text) VALUES(?,?)", (post_id, text))
+            connection.execute(
+                "INSERT INTO ai_insights(post_id,insight_text) VALUES(?,?) "
+                "ON CONFLICT(post_id) DO UPDATE SET insight_text=excluded.insight_text, created_at=CURRENT_TIMESTAMP",
+                (post_id, text),
+            )
             result = connection.execute("SELECT insight_text FROM ai_insights WHERE post_id=?", (post_id,)).fetchone()[0]
         return jsonify(insight=result)
 

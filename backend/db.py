@@ -11,6 +11,7 @@ Application code always writes SQLite-flavoured SQL with ``?`` placeholders;
 ``_translate`` converts it for PostgreSQL. Rows behave like ``sqlite3.Row``
 (``row["col"]``, ``row[0]`` and ``dict(row)`` all work) on both backends.
 """
+import logging
 import os
 import re
 import sqlite3
@@ -23,11 +24,20 @@ BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_DB = BASE_DIR / "wilddiary.db"
 
 
+_PG_SCHEMES = ("postgres://", "postgresql+psycopg://", "postgresql+psycopg2://")
+
+
 def database_url():
-    url = os.getenv("DATABASE_URL", "").strip()
-    # Some providers still hand out the legacy "postgres://" scheme.
-    if url.startswith("postgres://"):
-        url = "postgresql://" + url[len("postgres://"):]
+    # Tolerate values pasted into a dashboard with surrounding quotes or spaces.
+    url = os.getenv("DATABASE_URL", "").strip().strip("'\"").strip()
+    # Some providers still hand out the legacy "postgres://" or SQLAlchemy-style schemes.
+    for scheme in _PG_SCHEMES:
+        if url.startswith(scheme):
+            url = "postgresql://" + url[len(scheme):]
+            break
+    # Supabase only accepts encrypted connections.
+    if "supabase." in url and "sslmode=" not in url:
+        url += ("&" if "?" in url else "?") + "sslmode=require"
     return url
 
 
@@ -43,13 +53,25 @@ def backend_name():
     return "postgresql" if is_postgres() else "sqlite"
 
 
+def describe_database():
+    """Where data is stored, without credentials, for startup logs."""
+    if not is_postgres():
+        return f"sqlite ({database_path()})"
+    from urllib.parse import urlsplit
+    parts = urlsplit(database_url())
+    return f"postgresql ({parts.hostname}:{parts.port or 5432}{parts.path})"
+
+
 def require_persistent_database():
     """Prevent production from ever storing accounts on an ephemeral disk."""
     if os.getenv("APP_ENV", "development").lower() == "production" and not is_postgres():
+        raw = os.getenv("DATABASE_URL", "").strip()
+        hint = "it is not set" if not raw else f"it starts with {raw.split(':', 1)[0]!r}, not 'postgresql://'"
         raise RuntimeError(
-            "DATABASE_URL must be set to a persistent PostgreSQL database in production; "
-            "refusing to start with temporary SQLite storage."
+            "DATABASE_URL must be set to a persistent PostgreSQL database (e.g. Supabase) in production; "
+            f"{hint}. Refusing to start with temporary SQLite storage."
         )
+    logging.getLogger("wilddiary").warning("Database: %s", describe_database())
 
 
 
